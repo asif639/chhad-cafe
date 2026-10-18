@@ -15,7 +15,8 @@ main{max-width:850px;margin:auto;padding:14px}
 .panel,.order,.food{background:white;border-radius:12px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #0001}
 h2{font-size:19px}
 input,select,textarea,button{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd5cc;border-radius:8px;font-size:15px}
-button{background:#244c36;color:white;border:0;font-weight:bold}
+textarea{min-height:90px}
+button{background:#244c36;color:white;border:0;font-weight:bold;cursor:pointer}
 .secondary{background:#e5eee7;color:#244c36}
 .row{display:flex;gap:8px;align-items:center}
 .row>*{flex:1;min-width:0}
@@ -33,6 +34,7 @@ hr{border:0;border-top:1px solid #ddd;margin:20px 0}
 <h1>🎋 ছাদ ক্যাফে</h1>
 <div>অ্যাডমিন প্যানেল</div>
 </header>
+
 <main>
 <div id="message" class="notice hidden"></div>
 
@@ -44,7 +46,7 @@ hr{border:0;border-top:1px solid #ddd;margin:20px 0}
 <input id="email" type="email" required>
 <label>পাসওয়ার্ড</label>
 <input id="password" type="password" required>
-<button>লগইন</button>
+<button type="submit">লগইন</button>
 </form>
 </section>
 
@@ -57,6 +59,7 @@ hr{border:0;border-top:1px solid #ddd;margin:20px 0}
 <div class="row">
 <button id="ordersTab">📋 অর্ডার</button>
 <button id="menuTab" class="secondary">🍵 মেনু</button>
+<button id="noticeTab" class="secondary">📢 নোটিশ</button>
 </div>
 
 <section id="ordersPanel" class="panel">
@@ -65,7 +68,7 @@ hr{border:0;border-top:1px solid #ddd;margin:20px 0}
 <button id="refreshOrders" class="secondary">🔄 রিফ্রেশ</button>
 <button id="soundButton">🔔 শব্দ চালু</button>
 </div>
-<p class="small">নতুন অর্ডার পেতে প্রতি ৫ সেকেন্ডে তালিকা আপডেট হবে। শব্দ চালাতে একবার শব্দ চালু বোতামে চাপ দাও।</p>
+<p class="small">নতুন অর্ডার পেতে প্রতি ৫ সেকেন্ডে তালিকা আপডেট হবে।</p>
 <div id="ordersList">অর্ডার লোড হচ্ছে...</div>
 </section>
 
@@ -100,6 +103,31 @@ hr{border:0;border-top:1px solid #ddd;margin:20px 0}
 <button id="refreshMenu" class="secondary">মেনু রিফ্রেশ</button>
 <div id="menuList"></div>
 </section>
+
+<section id="noticePanel" class="panel hidden">
+<h2>📢 কাস্টমারদের জন্য নোটিশ</h2>
+<p class="small">এখানে প্রকাশিত নোটিশ কাস্টমার পেজে দেখানোর জন্য সংরক্ষিত হবে।</p>
+
+<form id="noticeForm">
+<input id="noticeId" type="hidden">
+<label>নোটিশের শিরোনাম</label>
+<input id="noticeTitle" placeholder="যেমন: আজকের বিশেষ ঘোষণা" required>
+<label>নোটিশের বিস্তারিত</label>
+<textarea id="noticeMessage" placeholder="কাস্টমারদের কী জানাতে চাও?" required></textarea>
+<label>প্রকাশের অবস্থা</label>
+<select id="noticePublished">
+<option value="true">প্রকাশিত</option>
+<option value="false">প্রকাশিত নয়</option>
+</select>
+<button type="submit">📢 নোটিশ সংরক্ষণ</button>
+<button type="button" id="clearNotice" class="secondary">নতুন নোটিশ লিখব</button>
+</form>
+
+<hr>
+<h2>আগের নোটিশ</h2>
+<button type="button" id="refreshNotices" class="secondary">নোটিশ রিফ্রেশ</button>
+<div id="noticeList">নোটিশ লোড হচ্ছে...</div>
+</section>
 </section>
 
 <p class="small">নিরাপত্তা: Supabase publishable key ছাড়া অন্য কোনো গোপন key এখানে বসাবে না।</p>
@@ -119,6 +147,7 @@ let loading=false;
 let audio=null;
 let soundOn=false;
 let menuCache=[];
+let noticeCache=[];
 
 const statuses=[
  ["pending","নতুন"],
@@ -199,6 +228,7 @@ async function verifyAdmin(){
  hideMessage();
  await loadOrders();
  await loadMenu();
+ await loadNotices();
  if(!timer)timer=setInterval(loadOrders,5000);
 }
 
@@ -222,13 +252,19 @@ $("logout").onclick=async()=>{
  $("password").value="";
 };
 
-$("ordersTab").onclick=()=>{
- $("ordersPanel").classList.remove("hidden");
- $("menuPanel").classList.add("hidden");
-};
-$("menuTab").onclick=()=>{
- $("menuPanel").classList.remove("hidden");
- $("ordersPanel").classList.add("hidden");
+function showPanel(which){
+ $("ordersPanel").classList.toggle("hidden",which!=="orders");
+ $("menuPanel").classList.toggle("hidden",which!=="menu");
+ $("noticePanel").classList.toggle("hidden",which!=="notice");
+ $("ordersTab").classList.toggle("secondary",which!=="orders");
+ $("menuTab").classList.toggle("secondary",which!=="menu");
+ $("noticeTab").classList.toggle("secondary",which!=="notice");
+}
+$("ordersTab").onclick=()=>showPanel("orders");
+$("menuTab").onclick=()=>showPanel("menu");
+$("noticeTab").onclick=async()=>{
+ showPanel("notice");
+ await loadNotices();
 };
 
 async function loadOrders(){
@@ -264,7 +300,6 @@ async function loadOrders(){
   });
 
   $("ordersList").innerHTML=orders.map(o=>{
-   const status=statuses.find(s=>s[0]===o.status);
    const lines=(grouped[String(o.id)]||[]).map(i=>
     esc(i.menu_name||"খাবার")+" × "+esc(i.quantity)+
     " — "+money(Number(i.unit_price)*Number(i.quantity))
@@ -374,6 +409,93 @@ window.deleteItem=async id=>{
  await loadMenu();
 };
 $("refreshMenu").onclick=loadMenu;
+
+/* নোটিশ পরিচালনা */
+function clearNoticeForm(){
+ $("noticeId").value="";
+ $("noticeTitle").value="";
+ $("noticeMessage").value="";
+ $("noticePublished").value="true";
+}
+
+$("clearNotice").onclick=clearNoticeForm;
+
+async function loadNotices(){
+ $("noticeList").textContent="নোটিশ লোড হচ্ছে...";
+ const {data,error}=await db.from("site_notices")
+  .select("*").order("created_at",{ascending:false});
+ if(error){
+  $("noticeList").textContent="নোটিশ লোড হয়নি।";
+  showMessage("নোটিশ লোডে সমস্যা: "+error.message,true);
+  return;
+ }
+ noticeCache=data||[];
+ if(!noticeCache.length){
+  $("noticeList").textContent="এখনো কোনো নোটিশ নেই।";
+  return;
+ }
+ $("noticeList").innerHTML=noticeCache.map(n=>`
+  <article class="food">
+   <b>${esc(n.title)}</b>
+   <p>${esc(n.message).replace(/\n/g,"<br>")}</p>
+   <p class="small">
+    ${n.is_published?"🟢 প্রকাশিত":"⚪ প্রকাশিত নয়"}
+    · ${esc(date(n.created_at))}
+   </p>
+   <div class="actions">
+    <button class="secondary" onclick="editNotice(${Number(n.id)})">এডিট</button>
+    <button onclick="deleteNotice(${Number(n.id)})">মুছুন</button>
+   </div>
+  </article>
+ `).join("");
+}
+
+window.editNotice=id=>{
+ const n=noticeCache.find(x=>Number(x.id)===Number(id));
+ if(!n)return;
+ $("noticeId").value=n.id;
+ $("noticeTitle").value=n.title||"";
+ $("noticeMessage").value=n.message||"";
+ $("noticePublished").value=String(n.is_published);
+ window.scrollTo({top:0,behavior:"smooth"});
+};
+
+$("noticeForm").onsubmit=async e=>{
+ e.preventDefault();
+ const id=$("noticeId").value;
+ const row={
+  title:$("noticeTitle").value.trim(),
+  message:$("noticeMessage").value.trim(),
+  is_published:$("noticePublished").value==="true"
+ };
+ if(!row.title||!row.message){
+  showMessage("শিরোনাম ও বিস্তারিত লিখো।",true);
+  return;
+ }
+ const result=id
+  ?await db.from("site_notices").update(row).eq("id",id)
+  :await db.from("site_notices").insert(row);
+
+ if(result.error){
+  showMessage("নোটিশ সংরক্ষণ হয়নি: "+result.error.message,true);
+  return;
+ }
+ clearNoticeForm();
+ showMessage("নোটিশ সংরক্ষণ হয়েছে।");
+ await loadNotices();
+};
+
+window.deleteNotice=async id=>{
+ if(!confirm("এই নোটিশটি স্থায়ীভাবে মুছবে?"))return;
+ const {error}=await db.from("site_notices").delete().eq("id",id);
+ if(error){
+  showMessage("নোটিশ মুছতে সমস্যা: "+error.message,true);
+  return;
+ }
+ showMessage("নোটিশ মুছে ফেলা হয়েছে।");
+ await loadNotices();
+};
+$("refreshNotices").onclick=loadNotices;
 
 (async()=>{
  const {data:{session}}=await db.auth.getSession();
