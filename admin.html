@@ -1,0 +1,384 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#244c36">
+<title>ছাদ ক্যাফে | অ্যাডমিন</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#f4f5ef;color:#24352a;font-family:Arial,sans-serif}
+header{background:#244c36;color:white;padding:20px}
+header h1{margin:0;font-size:23px}
+main{max-width:850px;margin:auto;padding:14px}
+.panel,.order,.food{background:white;border-radius:12px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #0001}
+h2{font-size:19px}
+input,select,textarea,button{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd5cc;border-radius:8px;font-size:15px}
+button{background:#244c36;color:white;border:0;font-weight:bold}
+.secondary{background:#e5eee7;color:#244c36}
+.row{display:flex;gap:8px;align-items:center}
+.row>*{flex:1;min-width:0}
+.small{font-size:13px;color:#69736a}
+.hidden{display:none!important}
+.notice{padding:12px;border-radius:8px;background:#e1f5e5;margin:10px 0;overflow-wrap:anywhere}
+.order p{line-height:1.7}
+.actions{display:flex;gap:8px}
+.actions button{flex:1}
+hr{border:0;border-top:1px solid #ddd;margin:20px 0}
+</style>
+</head>
+<body>
+<header>
+<h1>🎋 ছাদ ক্যাফে</h1>
+<div>অ্যাডমিন প্যানেল</div>
+</header>
+<main>
+<div id="message" class="notice hidden"></div>
+
+<section id="login" class="panel">
+<h2>🔐 অ্যাডমিন লগইন</h2>
+<p class="small">তোমার Supabase ইমেইল ও পাসওয়ার্ড দাও।</p>
+<form id="loginForm">
+<label>ইমেইল</label>
+<input id="email" type="email" required>
+<label>পাসওয়ার্ড</label>
+<input id="password" type="password" required>
+<button>লগইন</button>
+</form>
+</section>
+
+<section id="dashboard" class="hidden">
+<div class="panel">
+<div id="account"></div>
+<button id="logout" class="secondary">লগআউট</button>
+</div>
+
+<div class="row">
+<button id="ordersTab">📋 অর্ডার</button>
+<button id="menuTab" class="secondary">🍵 মেনু</button>
+</div>
+
+<section id="ordersPanel" class="panel">
+<h2>কাস্টমারের অর্ডার</h2>
+<div class="row">
+<button id="refreshOrders" class="secondary">🔄 রিফ্রেশ</button>
+<button id="soundButton">🔔 শব্দ চালু</button>
+</div>
+<p class="small">নতুন অর্ডার পেতে প্রতি ৫ সেকেন্ডে তালিকা আপডেট হবে। শব্দ চালাতে একবার শব্দ চালু বোতামে চাপ দাও।</p>
+<div id="ordersList">অর্ডার লোড হচ্ছে...</div>
+</section>
+
+<section id="menuPanel" class="panel hidden">
+<h2>🍵 মেনু পরিচালনা</h2>
+<form id="menuForm">
+<input id="itemId" type="hidden">
+<label>খাবারের নাম</label>
+<input id="itemName" required>
+<div class="row">
+<div><label>দাম</label><input id="itemPrice" type="number" min="0" step=".01" required></div>
+<div><label>ক্যাটাগরি</label><input id="itemCategory" placeholder="চা / নাশতা"></div>
+</div>
+<label>বর্ণনা</label>
+<textarea id="itemDescription"></textarea>
+<div class="row">
+<div><label>ইমোজি</label><input id="itemEmoji" value="☕"></div>
+<div><label>ছবির URL</label><input id="itemImage" type="url" placeholder="https://..."></div>
+</div>
+<label>সাজানোর ক্রম</label>
+<input id="itemSort" type="number" value="0">
+<label>স্টকে আছে?</label>
+<select id="itemAvailable">
+<option value="true">হ্যাঁ</option>
+<option value="false">না</option>
+</select>
+<button type="submit">💾 মেনু সংরক্ষণ</button>
+<button type="button" id="clearForm" class="secondary">ফর্ম পরিষ্কার</button>
+</form>
+<hr>
+<h2>বর্তমান মেনু</h2>
+<button id="refreshMenu" class="secondary">মেনু রিফ্রেশ</button>
+<div id="menuList"></div>
+</section>
+</section>
+
+<p class="small">নিরাপত্তা: Supabase publishable key ছাড়া অন্য কোনো গোপন key এখানে বসাবে না।</p>
+</main>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script>
+const db=window.supabase.createClient(
+ "https://xkwjtaiuadzmvvkgeznw.supabase.co",
+ "sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W"
+);
+const $=id=>document.getElementById(id);
+
+let timer=null;
+let knownIds=null;
+let loading=false;
+let audio=null;
+let soundOn=false;
+let menuCache=[];
+
+const statuses=[
+ ["pending","নতুন"],
+ ["preparing","তৈরি হচ্ছে"],
+ ["ready","প্রস্তুত"],
+ ["completed","সম্পন্ন"],
+ ["cancelled","বাতিল"]
+];
+
+function showMessage(text,error=false){
+ $("message").textContent=text;
+ $("message").classList.remove("hidden");
+ $("message").style.background=error?"#ffebee":"#e1f5e5";
+ $("message").style.color=error?"#a32121":"#205b32";
+}
+function hideMessage(){$("message").classList.add("hidden")}
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ }[c]));
+}
+function money(v){return "৳"+Number(v||0).toLocaleString("en-BD")}
+function date(v){return new Date(v).toLocaleString("bn-BD")}
+
+function playSound(){
+ if(!soundOn||!audio)return;
+ try{
+  [0,.23].forEach(delay=>{
+   const osc=audio.createOscillator();
+   const gain=audio.createGain();
+   const start=audio.currentTime+delay;
+   osc.type="sine";
+   osc.frequency.value=880;
+   gain.gain.setValueAtTime(.14,start);
+   gain.gain.exponentialRampToValueAtTime(.001,start+.18);
+   osc.connect(gain);
+   gain.connect(audio.destination);
+   osc.start(start);
+   osc.stop(start+.19);
+  });
+ }catch(e){console.error(e)}
+}
+
+$("soundButton").onclick=async()=>{
+ try{
+  const AudioClass=window.AudioContext||window.webkitAudioContext;
+  if(!AudioClass){showMessage("এই ব্রাউজারে শব্দ চালানো যাচ্ছে না।",true);return}
+  if(!audio)audio=new AudioClass();
+  await audio.resume();
+  soundOn=true;
+  $("soundButton").textContent="🔔 শব্দ চালু আছে";
+  playSound();
+  showMessage("শব্দ চালু হয়েছে। নতুন অর্ডার এলে শব্দ হবে।");
+ }catch(e){showMessage("শব্দ চালু হয়নি। আবার চেষ্টা করো।",true)}
+};
+
+async function verifyAdmin(){
+ const {data:{user}}=await db.auth.getUser();
+ if(!user){
+  $("login").classList.remove("hidden");
+  $("dashboard").classList.add("hidden");
+  if(timer){clearInterval(timer);timer=null}
+  return;
+ }
+ const {data,error}=await db.from("admin_users")
+  .select("user_id").eq("user_id",user.id).maybeSingle();
+
+ if(error||!data){
+  await db.auth.signOut();
+  $("login").classList.remove("hidden");
+  $("dashboard").classList.add("hidden");
+  showMessage("অ্যাডমিন অনুমতি পাওয়া যায়নি। admin_users টেবিল ও UID পরীক্ষা করো।",true);
+  return;
+ }
+ $("login").classList.add("hidden");
+ $("dashboard").classList.remove("hidden");
+ $("account").textContent="লগইন: "+(user.email||"অ্যাডমিন");
+ hideMessage();
+ await loadOrders();
+ await loadMenu();
+ if(!timer)timer=setInterval(loadOrders,5000);
+}
+
+$("loginForm").onsubmit=async e=>{
+ e.preventDefault();
+ hideMessage();
+ const {error}=await db.auth.signInWithPassword({
+  email:$("email").value.trim(),
+  password:$("password").value
+ });
+ if(error){showMessage("লগইন সমস্যা: "+error.message,true);return}
+ await verifyAdmin();
+};
+
+$("logout").onclick=async()=>{
+ if(timer){clearInterval(timer);timer=null}
+ await db.auth.signOut();
+ $("dashboard").classList.add("hidden");
+ $("login").classList.remove("hidden");
+ knownIds=null;
+ $("password").value="";
+};
+
+$("ordersTab").onclick=()=>{
+ $("ordersPanel").classList.remove("hidden");
+ $("menuPanel").classList.add("hidden");
+};
+$("menuTab").onclick=()=>{
+ $("menuPanel").classList.remove("hidden");
+ $("ordersPanel").classList.add("hidden");
+};
+
+async function loadOrders(){
+ if(loading||$("dashboard").classList.contains("hidden"))return;
+ loading=true;
+ try{
+  const {data:orders,error}=await db.from("orders")
+   .select("*").order("created_at",{ascending:false}).limit(100);
+  if(error)throw error;
+
+  const ids=new Set((orders||[]).map(o=>String(o.id)));
+  if(knownIds!==null){
+   const newOrders=(orders||[]).filter(o=>!knownIds.has(String(o.id)));
+   if(newOrders.length){
+    playSound();
+    showMessage("🔔 নতুন অর্ডার এসেছে! মোট নতুন অর্ডার: "+newOrders.length);
+   }
+  }
+  knownIds=ids;
+
+  if(!orders||!orders.length){
+   $("ordersList").textContent="এখনো কোনো অর্ডার নেই।";
+   return;
+  }
+
+  const {data:items,error:itemError}=await db.from("order_items")
+   .select("*").in("order_id",orders.map(o=>o.id));
+  if(itemError)throw itemError;
+
+  const grouped={};
+  (items||[]).forEach(i=>{
+   (grouped[String(i.order_id)]??=[]).push(i);
+  });
+
+  $("ordersList").innerHTML=orders.map(o=>{
+   const status=statuses.find(s=>s[0]===o.status);
+   const lines=(grouped[String(o.id)]||[]).map(i=>
+    esc(i.menu_name||"খাবার")+" × "+esc(i.quantity)+
+    " — "+money(Number(i.unit_price)*Number(i.quantity))
+   ).join("<br>");
+
+   return `<article class="order">
+    <b>অর্ডার #${esc(o.id)} · টেবিল ${esc(o.table_number)}</b>
+    <p class="small">${esc(date(o.created_at))}<br>
+    নাম: ${esc(o.customer_name||"অতিথি")}</p>
+    <div>${lines||"আইটেমের তথ্য পাওয়া যায়নি"}</div>
+    <p>${o.note?"নোট: "+esc(o.note)+"<br>":""}
+    <b>মোট: ${money(o.total)}</b></p>
+    <label>অর্ডারের অবস্থা</label>
+    <select id="status-${esc(o.id)}">
+     ${statuses.map(s=>`<option value="${s[0]}" ${s[0]===o.status?"selected":""}>${s[1]}</option>`).join("")}
+    </select>
+    <button onclick="updateStatus('${String(o.id).replace(/'/g,"")}')">স্ট্যাটাস সংরক্ষণ</button>
+   </article>`;
+  }).join("");
+ }catch(e){
+  console.error(e);
+  showMessage("অর্ডার লোড হয়নি: "+(e.message||"ডেটাবেস সমস্যা"),true);
+ }finally{
+  loading=false;
+ }
+}
+
+window.updateStatus=async id=>{
+ const status=$("status-"+id).value;
+ const {error}=await db.from("orders").update({status}).eq("id",id);
+ if(error){showMessage("স্ট্যাটাস বদলানো যায়নি: "+error.message,true);return}
+ showMessage("অর্ডার #"+id+"-এর স্ট্যাটাস বদলেছে।");
+ await loadOrders();
+};
+$("refreshOrders").onclick=loadOrders;
+
+function clearForm(){
+ ["itemId","itemName","itemPrice","itemCategory","itemDescription","itemImage"]
+ .forEach(id=>$(id).value="");
+ $("itemEmoji").value="☕";
+ $("itemSort").value="0";
+ $("itemAvailable").value="true";
+}
+$("clearForm").onclick=clearForm;
+
+async function loadMenu(){
+ $("menuList").textContent="মেনু লোড হচ্ছে...";
+ const {data,error}=await db.from("menu_items")
+  .select("*").order("sort_order").order("id");
+ if(error){showMessage("মেনু লোড হয়নি: "+error.message,true);return}
+ menuCache=data||[];
+ $("menuList").innerHTML=menuCache.length?menuCache.map(m=>
+  `<article class="food">
+   <b>${esc(m.emoji||"🍵")} ${esc(m.name)} — ${money(m.price)}</b>
+   <p class="small">${esc(m.category||"")} · ${m.available?"স্টকে আছে":"স্টকে নেই"}</p>
+   <p>${esc(m.description||"")}</p>
+   <div class="actions">
+    <button class="secondary" onclick="editItem(${Number(m.id)})">এডিট</button>
+    <button onclick="deleteItem(${Number(m.id)})">মুছুন</button>
+   </div>
+  </article>`
+ ).join(""):"মেনুতে কোনো খাবার নেই।";
+}
+
+window.editItem=id=>{
+ const m=menuCache.find(x=>Number(x.id)===Number(id));
+ if(!m)return;
+ $("itemId").value=m.id;
+ $("itemName").value=m.name||"";
+ $("itemPrice").value=m.price;
+ $("itemCategory").value=m.category||"";
+ $("itemDescription").value=m.description||"";
+ $("itemEmoji").value=m.emoji||"☕";
+ $("itemImage").value=m.image_url||"";
+ $("itemSort").value=m.sort_order||0;
+ $("itemAvailable").value=String(m.available!==false);
+ window.scrollTo({top:0,behavior:"smooth"});
+};
+
+$("menuForm").onsubmit=async e=>{
+ e.preventDefault();
+ const id=$("itemId").value;
+ const row={
+  name:$("itemName").value.trim(),
+  price:Number($("itemPrice").value),
+  category:$("itemCategory").value.trim()||null,
+  description:$("itemDescription").value.trim()||null,
+  emoji:$("itemEmoji").value.trim()||"☕",
+  image_url:$("itemImage").value.trim()||null,
+  sort_order:Number($("itemSort").value||0),
+  available:$("itemAvailable").value==="true"
+ };
+ const result=id
+  ?await db.from("menu_items").update(row).eq("id",id)
+  :await db.from("menu_items").insert(row);
+ if(result.error){showMessage("মেনু সংরক্ষণ হয়নি: "+result.error.message,true);return}
+ showMessage("মেনু সংরক্ষণ হয়েছে।");
+ clearForm();
+ await loadMenu();
+};
+
+window.deleteItem=async id=>{
+ if(!confirm("এই মেনু আইটেমটি মুছবে?"))return;
+ const {error}=await db.from("menu_items").delete().eq("id",id);
+ if(error){showMessage("মুছতে সমস্যা: "+error.message,true);return}
+ showMessage("আইটেম মুছে ফেলা হয়েছে।");
+ await loadMenu();
+};
+$("refreshMenu").onclick=loadMenu;
+
+(async()=>{
+ const {data:{session}}=await db.auth.getSession();
+ if(session)await verifyAdmin();
+})();
+</script>
+</body>
+</html>
