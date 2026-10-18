@@ -1,0 +1,19 @@
+
+{
+  "id": "./index.html",
+  "name": "বাঁশের ক্যাফে - কাস্টমার",
+  "short_name": "বাঁশের ক্যাফে",
+  "description": "বাঁশের ক্যাফের QR অর্ডারিং অ্যাপ",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#F8F3E8",
+  "theme_color": "#245C3A",
+  "icons": [
+    {
+      "src": "./customer-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    }
+  ]
+}
