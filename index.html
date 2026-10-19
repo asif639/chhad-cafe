@@ -4,33 +4,86 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#244c36">
+<meta name="theme-color" content="#171717">
 <title>আড্ডা রাজ | খাবার অর্ডার</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <style>
 *{box-sizing:border-box}
-body{font-family:system-ui,sans-serif;background:#f4f5ef;color:#24352a}
+:root{
+  --black:#171717;
+  --charcoal:#242424;
+  --gold:#d4ad59;
+  --gold-dark:#a98132;
+  --cream:#f7f3e9;
+  --white:#fffdf8;
+  --muted:#777166;
+  --border:#e8dfcc;
+}
+body{
+  margin:0;
+  font-family:system-ui,sans-serif;
+  background:var(--cream);
+  color:var(--black);
+}
+button,input,textarea,select{font:inherit}
+button{transition:background .18s,transform .18s}
 button:disabled{opacity:.55}
-.food-img{width:86px;height:86px;object-fit:cover;border-radius:14px;background:#e8ebdf}
-.card{background:white;border:1px solid #e5e7df;border-radius:18px}
-.green{background:#244c36}
+button:not(:disabled):active{transform:scale(.98)}
+.food-img{
+  width:86px;height:86px;object-fit:cover;
+  border-radius:14px;background:#eee6d5;
+}
+.card{
+  background:var(--white);
+  border:1px solid var(--border);
+  border-radius:18px;
+  box-shadow:0 3px 12px #21190908;
+}
+.gold-btn{background:var(--gold);color:#171717}
+.gold-btn:hover{background:#e2bf72}
+.dark-btn{background:var(--black);color:var(--gold)}
+.dark-btn:hover{background:#303030}
+.gold-text{color:var(--gold-dark)}
+.field{
+  width:100%;border:1px solid var(--border);
+  border-radius:12px;padding:12px;
+  background:#fffdf8;color:var(--black);
+  outline:none;font-size:14px;
+}
+.field:focus{border-color:var(--gold-dark);box-shadow:0 0 0 2px #d4ad5925}
+.cat-btn{border:1px solid var(--border)}
+.cat-active{background:var(--black);color:var(--gold);border-color:var(--black)}
+.section-title{font-weight:800;letter-spacing:-.3px}
+.hero{
+  background:radial-gradient(ellipse at top right,#49402d 0%,#25231e 42%,#171717 78%);
+  border:1px solid #55472d;
+}
+.gold-line{height:2px;background:linear-gradient(90deg,#8b6a2e,#e8ca80,#8b6a2e)}
+@media(max-width:380px){
+  .food-img{width:70px;height:70px}
+  .hero{padding:20px}
+}
 </style>
 </head>
+
 <body class="min-h-screen pb-12">
 
-<header class="green text-white sticky top-0 z-40 shadow-lg">
+<header class="sticky top-0 z-40 shadow-xl" style="background:var(--black);border-bottom:1px solid #5b4828">
   <div class="max-w-xl mx-auto p-4 flex justify-between items-center gap-3">
-    <div class="flex items-center gap-3">
-      <div class="text-3xl">🎋</div>
-      <div>
-        <h1 class="text-xl font-extrabold">আড্ডা রাজ</h1>
-        <p class="text-xs text-green-100">চা, নাশতা আর জমুক আড্ডা</p>
+    <div class="flex items-center gap-3 min-w-0">
+      <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-2xl shrink-0"
+           style="background:#2b2923;border:1px solid #7c6333">♛</div>
+      <div class="min-w-0">
+        <h1 class="text-xl font-extrabold tracking-wide" style="color:var(--gold)">আড্ডা রাজ</h1>
+        <p class="text-xs" style="color:#e5dfd1">চা, নাশতা আর জমুক আড্ডা</p>
       </div>
     </div>
-    <div class="text-right">
-      <p class="text-xs text-green-100">আপনার টেবিল</p>
-      <select id="table-select" class="mt-1 rounded-lg bg-white text-green-900 font-bold p-2 text-sm">
+    <div class="text-right shrink-0">
+      <label for="table-select" class="text-xs" style="color:#e5dfd1">আপনার টেবিল</label>
+      <select id="table-select" class="mt-1 rounded-lg p-2 text-sm font-bold"
+              style="background:var(--cream);color:var(--black);border:1px solid var(--gold)">
         <option value="">বেছে নিন</option>
         <option value="1">টেবিল ১</option>
         <option value="2">টেবিল ২</option>
@@ -49,85 +102,91 @@ button:disabled{opacity:.55}
 
 <main class="max-w-xl mx-auto p-4 space-y-5">
 
-  <section class="rounded-3xl overflow-hidden green text-white p-6">
-    <p class="text-green-200 text-xs font-bold tracking-widest">WELCOME TO ADDA RAJ</p>
-    <h2 class="text-2xl font-extrabold mt-2">আপনার আড্ডা, আমাদের আয়োজন 🌿</h2>
-    <p class="text-sm text-green-100 mt-2">পছন্দের খাবার বেছে নিন, অর্ডার দিন।</p>
+  <section class="hero rounded-3xl overflow-hidden p-6 text-white relative">
+    <p class="text-xs font-bold tracking-[.22em]" style="color:var(--gold)">WELCOME TO ADDA RAJ</p>
+    <div class="gold-line w-16 mt-3 mb-4"></div>
+    <h2 class="text-2xl font-extrabold leading-snug">আপনার আড্ডা,<br>
+      <span style="color:var(--gold)">আমাদের আয়োজন</span> ♛
+    </h2>
+    <p class="text-sm mt-3" style="color:#e5dfd1">পছন্দের খাবার বেছে নিন, আরাম করে আড্ডা দিন।</p>
     <div class="mt-5 flex gap-2 flex-wrap text-xs">
-      <span class="bg-white/10 rounded-full px-3 py-2">🍵 গরম চা</span>
-      <span class="bg-white/10 rounded-full px-3 py-2">🥟 মজার নাশতা</span>
-      <span class="bg-white/10 rounded-full px-3 py-2">💚 সুন্দর আড্ডা</span>
+      <span class="rounded-full px-3 py-2" style="background:#ffffff12;border:1px solid #ffffff22">🍵 গরম চা</span>
+      <span class="rounded-full px-3 py-2" style="background:#ffffff12;border:1px solid #ffffff22">🥟 মজার নাশতা</span>
+      <span class="rounded-full px-3 py-2" style="background:#ffffff12;border:1px solid #ffffff22">✦ সুন্দর আড্ডা</span>
     </div>
   </section>
 
   <section class="card p-4 space-y-3">
-    <h2 class="font-bold text-lg">👤 আপনার তথ্য</h2>
-    <input id="cust-name" maxlength="80" placeholder="আপনার নাম (ঐচ্ছিক)"
-      class="w-full border rounded-xl p-3 bg-stone-50 text-sm">
-    <textarea id="cust-note" maxlength="500" placeholder="বিশেষ নির্দেশনা (ঐচ্ছিক)"
-      class="w-full border rounded-xl p-3 bg-stone-50 text-sm" rows="2"></textarea>
-    <p class="text-xs text-slate-500">যেমন: চায়ে চিনি কম দেবেন।</p>
+    <h2 class="section-title text-lg">আপনার তথ্য</h2>
+    <input id="cust-name" maxlength="80" placeholder="আপনার নাম (ঐচ্ছিক)" class="field">
+    <textarea id="cust-note" maxlength="500" placeholder="বিশেষ নির্দেশনা (ঐচ্ছিক)" class="field" rows="2"></textarea>
+    <p class="text-xs" style="color:var(--muted)">যেমন: চায়ে চিনি কম দেবেন।</p>
   </section>
 
   <section>
     <div class="flex justify-between items-center mb-3">
       <div>
-        <h2 class="text-xl font-extrabold">আমাদের মেনু</h2>
-        <p class="text-xs text-slate-500 mt-1">পছন্দের খাবার যোগ করুন</p>
+        <h2 class="section-title text-xl">আমাদের মেনু</h2>
+        <p class="text-xs mt-1" style="color:var(--muted)">পছন্দের খাবার যোগ করুন</p>
       </div>
-      <button id="reload-menu" class="text-sm font-bold text-green-800 underline">রিফ্রেশ</button>
+      <button id="reload-menu" class="text-sm font-bold underline gold-text">রিফ্রেশ</button>
     </div>
 
     <div class="flex gap-2 overflow-x-auto pb-3">
-      <button data-cat="সব" class="cat-btn green text-white rounded-full px-5 py-2 text-sm shrink-0">সব খাবার</button>
-      <button data-cat="চা" class="cat-btn bg-white border rounded-full px-5 py-2 text-sm shrink-0">চা</button>
-      <button data-cat="নাশতা" class="cat-btn bg-white border rounded-full px-5 py-2 text-sm shrink-0">নাশতা</button>
+      <button data-cat="সব" class="cat-btn cat-active rounded-full px-5 py-2 text-sm shrink-0">সব খাবার</button>
+      <button data-cat="চা" class="cat-btn rounded-full px-5 py-2 text-sm shrink-0 bg-white">চা</button>
+      <button data-cat="নাশতা" class="cat-btn rounded-full px-5 py-2 text-sm shrink-0 bg-white">নাশতা</button>
     </div>
     <div id="menu-container" class="space-y-3">
-      <div class="card p-5 text-center text-sm text-slate-500">মেনু লোড হচ্ছে...</div>
+      <div class="card p-5 text-center text-sm">মেনু লোড হচ্ছে...</div>
     </div>
   </section>
 
   <section class="card p-5 space-y-4">
-    <div class="flex justify-between items-center border-b pb-3">
-      <h2 class="text-lg font-extrabold">🛒 আপনার অর্ডার</h2>
-      <span id="cart-count" class="text-xs rounded-full bg-green-100 text-green-900 px-3 py-1">০টি খাবার</span>
+    <div class="flex justify-between items-center border-b pb-3" style="border-color:var(--border)">
+      <h2 class="section-title text-lg">🛒 আপনার অর্ডার</h2>
+      <span id="cart-count" class="text-xs rounded-full px-3 py-1 font-bold"
+            style="background:#f0e5c9;color:#5c4316">০টি খাবার</span>
     </div>
     <div id="cart-items" class="space-y-3">
-      <p class="text-sm text-center text-slate-400 py-3">এখনো খাবার যোগ করেননি</p>
+      <p class="text-sm text-center py-3" style="color:var(--muted)">এখনো খাবার যোগ করেননি</p>
     </div>
-    <div class="border-t pt-4 flex justify-between items-center">
+    <div class="border-t pt-4 flex justify-between items-center" style="border-color:var(--border)">
       <span class="font-bold">সর্বমোট</span>
-      <span class="text-xl font-extrabold text-green-800">৳<span id="cart-total">0</span></span>
+      <span class="text-xl font-extrabold gold-text">৳<span id="cart-total">0</span></span>
     </div>
-    <div class="bg-stone-50 rounded-xl p-3 text-sm">
+    <div class="rounded-xl p-3 text-sm" style="background:#f4eddd">
       💵 টাকা ক্যাফেতে সরাসরি পরিশোধ করবেন।
     </div>
-    <button id="submit-btn" class="green text-white font-bold w-full rounded-xl py-4">
+    <button id="submit-btn" class="gold-btn font-extrabold w-full rounded-xl py-4 shadow-sm">
       অর্ডার কনফার্ম করুন
     </button>
     <p id="order-message" class="text-sm text-center" role="status" aria-live="polite"></p>
   </section>
 
   <section id="status-section" class="hidden card p-5 space-y-3">
-    <h2 class="text-lg font-extrabold">📦 আপনার অর্ডার</h2>
-    <div class="rounded-xl bg-stone-50 p-3 space-y-2 text-sm">
+    <h2 class="section-title text-lg">📦 আপনার অর্ডার</h2>
+    <div class="rounded-xl p-3 space-y-2 text-sm" style="background:#f4eddd">
       <p>অর্ডার নম্বর: <b id="status-id">—</b></p>
       <p>টেবিল: <b id="status-table">—</b></p>
       <p>মোট: <b>৳<span id="status-total">0</span></b></p>
     </div>
-    <div class="rounded-xl bg-green-50 p-4">
-      <p class="text-xs text-green-800">বর্তমান অবস্থা</p>
-      <p id="status-value" class="font-extrabold text-lg text-green-900 mt-1">Pending</p>
-      <p id="status-description" class="text-sm mt-2 text-green-900">আপনার অর্ডার গ্রহণের অপেক্ষায়।</p>
+    <div class="rounded-xl p-4" style="background:#211f1a;color:#fffaf0">
+      <p class="text-xs" style="color:var(--gold)">বর্তমান অবস্থা</p>
+      <p id="status-value" class="font-extrabold text-lg mt-1">অপেক্ষমাণ</p>
+      <p id="status-description" class="text-sm mt-2" style="color:#e5dfd1">আপনার অর্ডার গ্রহণের অপেক্ষায়।</p>
     </div>
-    <p id="status-updated" class="text-xs text-slate-500"></p>
-    <button id="refresh-status" class="w-full border border-green-800 text-green-900 rounded-xl py-3 font-bold">
+    <p id="status-updated" class="text-xs" style="color:var(--muted)"></p>
+    <button id="refresh-status" class="w-full rounded-xl py-3 font-bold"
+            style="border:1px solid var(--gold-dark);color:var(--gold-dark)">
       অর্ডারের অবস্থা দেখুন
     </button>
   </section>
 
-  <p class="text-center text-xs text-slate-500">🌿 আড্ডা রাজ — ভালো খাবার, সুন্দর আড্ডা</p>
+  <footer class="text-center pt-3">
+    <div class="gold-line w-16 mx-auto mb-3"></div>
+    <p class="text-xs" style="color:var(--muted)">♛ আড্ডা রাজ — ভালো খাবার, সুন্দর আড্ডা</p>
+  </footer>
 </main>
 
 <script>
@@ -167,15 +226,14 @@ function esc(s) {
 
 function say(message, error = false) {
   $("order-message").textContent = message;
-  $("order-message").className =
-    "text-sm text-center " + (error ? "text-red-600" : "text-green-800");
+  $("order-message").style.color = error ? "#b91c1c" : "#75602e";
 }
 
 function renderCategories() {
   document.querySelectorAll(".cat-btn").forEach(b => {
     const active = b.dataset.cat === category;
     b.className = "cat-btn rounded-full px-5 py-2 text-sm shrink-0 " +
-      (active ? "green text-white" : "bg-white border");
+      (active ? "cat-active" : "bg-white");
   });
 }
 
@@ -188,7 +246,7 @@ function renderMenu() {
 
   if (!list.length) {
     $("menu-container").innerHTML =
-      '<div class="card p-5 text-center text-sm text-slate-500">এই বিভাগে খাবার নেই। মেনুতে খাবার যোগ করুন।</div>';
+      '<div class="card p-5 text-center text-sm">এই বিভাগে খাবার নেই। মেনুতে খাবার যোগ করুন।</div>';
     return;
   }
 
@@ -204,18 +262,18 @@ function renderMenu() {
         ${image}
         <div class="flex-1 min-w-0">
           <h3 class="font-bold">${esc(item.name)}</h3>
-          <p class="text-xs text-slate-500 mt-1">${esc(item.description || "")}</p>
-          <p class="font-extrabold text-green-800 mt-2">৳${money(item.price)}</p>
+          <p class="text-xs mt-1" style="color:var(--muted)">${esc(item.description || "")}</p>
+          <p class="font-extrabold gold-text mt-2">৳${money(item.price)}</p>
         </div>
         <div class="shrink-0">
           ${qty ? `
             <div class="flex items-center gap-2">
-              <button class="qty-btn border rounded-lg w-8 h-8" data-id="${esc(id)}" data-d="-1" aria-label="কমাও">−</button>
+              <button class="qty-btn rounded-lg w-8 h-8" style="border:1px solid var(--border)" data-id="${esc(id)}" data-d="-1" aria-label="কমাও">−</button>
               <b>${bn(qty)}</b>
-              <button class="qty-btn green text-white rounded-lg w-8 h-8" data-id="${esc(id)}" data-d="1" aria-label="বাড়াও">+</button>
+              <button class="qty-btn dark-btn rounded-lg w-8 h-8" data-id="${esc(id)}" data-d="1" aria-label="বাড়াও">+</button>
             </div>
           ` : `
-            <button class="qty-btn green text-white rounded-xl px-3 py-2 text-sm font-bold" data-id="${esc(id)}" data-d="1">+ যোগ</button>
+            <button class="qty-btn dark-btn rounded-xl px-3 py-2 text-sm font-bold" data-id="${esc(id)}" data-d="1">+ যোগ</button>
           `}
         </div>
       </article>`;
@@ -229,7 +287,7 @@ function renderCart() {
 
   if (!ids.length) {
     $("cart-items").innerHTML =
-      '<p class="text-sm text-center text-slate-400 py-3">এখনো খাবার যোগ করেননি</p>';
+      '<p class="text-sm text-center py-3" style="color:var(--muted)">এখনো খাবার যোগ করেননি</p>';
   } else {
     $("cart-items").innerHTML = ids.map(id => {
       const item = menuItems.find(x => String(x.id) === id);
@@ -241,10 +299,10 @@ function renderCart() {
       return `<div class="flex items-center justify-between gap-3 text-sm">
         <div class="flex-1 min-w-0">
           <p class="font-bold">${esc(item.name)}</p>
-          <p class="text-xs text-slate-500">৳${money(item.price)} × ${bn(qty)}</p>
+          <p class="text-xs" style="color:var(--muted)">৳${money(item.price)} × ${bn(qty)}</p>
         </div>
         <div class="font-bold">৳${money(Number(item.price) * qty)}</div>
-        <button class="remove-btn text-red-600 px-2 py-1" data-id="${esc(id)}" aria-label="মুছুন">✕</button>
+        <button class="remove-btn px-2 py-1" style="color:#b91c1c" data-id="${esc(id)}" aria-label="মুছুন">✕</button>
       </div>`;
     }).join("");
   }
@@ -281,7 +339,7 @@ document.querySelectorAll(".cat-btn").forEach(b => {
 async function loadMenu() {
   $("reload-menu").disabled = true;
   $("menu-container").innerHTML =
-    '<div class="card p-5 text-center text-sm text-slate-500">মেনু লোড হচ্ছে...</div>';
+    '<div class="card p-5 text-center text-sm">মেনু লোড হচ্ছে...</div>';
 
   try {
     const {data, error} = await db.from("menu_items")
@@ -295,7 +353,7 @@ async function loadMenu() {
     renderCart();
   } catch (e) {
     $("menu-container").innerHTML =
-      '<div class="card p-5 text-sm text-red-700">মেনু লোড হয়নি। ইন্টারনেট, Supabase সংযোগ ও অনুমতি পরীক্ষা করুন।</div>';
+      '<div class="card p-5 text-sm" style="color:#b91c1c">মেনু লোড হয়নি। ইন্টারনেট, Supabase সংযোগ ও অনুমতি পরীক্ষা করুন।</div>';
     console.error("Menu error:", e);
   } finally {
     $("reload-menu").disabled = false;
@@ -304,7 +362,7 @@ async function loadMenu() {
 
 function showStatus(order) {
   const status = String(order.status || "pending").toLowerCase();
-  const label = STATUS[status] || [order.status || "Pending", "অর্ডারের অবস্থা আপডেট করা হয়েছে।"];
+  const label = STATUS[status] || [order.status || "অপেক্ষমাণ", "অর্ডারের অবস্থা আপডেট করা হয়েছে।"];
 
   $("status-section").classList.remove("hidden");
   $("status-id").textContent = order.id;
@@ -327,11 +385,13 @@ async function refreshStatus() {
       .maybeSingle();
 
     if (error) throw error;
-    if (data) showStatus(data);
+    if (data) {
+      showStatus(data);
+      try { localStorage.setItem("addaRajLastOrder", JSON.stringify(data)); } catch (_) {}
+    }
   } catch (e) {
     console.error("Status refresh error:", e);
-    $("status-updated").textContent =
-      "অবস্থা পাওয়া যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।";
+    $("status-updated").textContent = "অবস্থা পাওয়া যাচ্ছে না। একটু পরে আবার চেষ্টা করুন।";
   }
 }
 
@@ -347,17 +407,18 @@ function watchOrder(id) {
       filter: "id=eq." + id
     }, payload => {
       showStatus(payload.new);
+      try { localStorage.setItem("addaRajLastOrder", JSON.stringify(payload.new)); } catch (_) {}
       if ("Notification" in window && Notification.permission === "granted") {
         try {
+          const label = STATUS[String(payload.new.status || "").toLowerCase()];
           new Notification("আড্ডা রাজ: অর্ডার আপডেট", {
-            body: (STATUS[String(payload.new.status || "").toLowerCase()] || [payload.new.status])[0]
+            body: label ? label[0] : String(payload.new.status || "আপডেট হয়েছে")
           });
         } catch (_) {}
       }
     })
     .subscribe();
 
-  // Realtime unavailable হলেও পেজ খোলা থাকলে অবস্থা পুনরায় পরীক্ষা করবে।
   pollTimer = setInterval(refreshStatus, 10000);
   refreshStatus();
 }
@@ -403,7 +464,6 @@ $("submit-btn").addEventListener("click", async () => {
   say("");
 
   try {
-    // Existing database column is spelled customer_nam.
     const {data: order, error: orderError} = await db.from("orders")
       .insert({
         table_number: table,
@@ -428,17 +488,16 @@ $("submit-btn").addEventListener("click", async () => {
     const {error: itemsError} = await db.from("order_items").insert(orderItems);
     if (itemsError) {
       console.error("Order items error:", itemsError);
-      say("অর্ডার নম্বর " + order.id + " তৈরি হয়েছে, কিন্তু খাবারের তালিকা সংরক্ষণে সমস্যা হয়েছে। কর্মীকে অর্ডার নম্বরটি জানান।", true);
       orderId = order.id;
+      try { localStorage.setItem("addaRajLastOrder", JSON.stringify(order)); } catch (_) {}
       showStatus(order);
       watchOrder(orderId);
+      say("অর্ডার নম্বর " + order.id + " তৈরি হয়েছে, কিন্তু খাবারের তালিকা সংরক্ষণে সমস্যা হয়েছে। কর্মীকে অর্ডার নম্বরটি জানান।", true);
       return;
     }
 
     orderId = order.id;
-    try {
-      localStorage.setItem("addaRajLastOrder", JSON.stringify(order));
-    } catch (_) {}
+    try { localStorage.setItem("addaRajLastOrder", JSON.stringify(order)); } catch (_) {}
 
     showStatus(order);
     watchOrder(orderId);
@@ -446,8 +505,7 @@ $("submit-btn").addEventListener("click", async () => {
     renderMenu();
     renderCart();
     say("অর্ডার গ্রহণের জন্য পাঠানো হয়েছে! অর্ডার নম্বর: " + order.id + "। টাকা ক্যাফেতে সরাসরি পরিশোধ করবেন।");
-
-    $("status-section").scrollIntoView({behavior: "smooth", block: "start"});
+    $("status-section").scrollIntoView({behavior:"smooth", block:"start"});
   } catch (e) {
     console.error("Order error:", e);
     say("অর্ডার পাঠানো যায়নি: " + (e.message || "Supabase সংযোগ পরীক্ষা করুন।"), true);
@@ -464,7 +522,7 @@ $("reload-menu").addEventListener("click", loadMenu);
 (async function init() {
   if (!window.supabase) {
     $("menu-container").innerHTML =
-      '<div class="card p-5 text-red-700 text-sm">Supabase লাইব্রেরি লোড হয়নি। ইন্টারনেট পরীক্ষা করুন।</div>';
+      '<div class="card p-5 text-sm" style="color:#b91c1c">Supabase লাইব্রেরি লোড হয়নি। ইন্টারনেট পরীক্ষা করুন।</div>';
     return;
   }
 
@@ -472,14 +530,12 @@ $("reload-menu").addEventListener("click", loadMenu);
   await loadMenu();
   restoreOrder();
 
-  // Browser notification permission is optional.
-  // Request only after the customer has actively used the page.
   document.addEventListener("click", function requestPermissionOnce() {
     document.removeEventListener("click", requestPermissionOnce);
     if ("Notification" in window && Notification.permission === "default") {
       Notification.requestPermission().catch(() => {});
     }
-  }, {once: true});
+  }, {once:true});
 })();
 })();
 </script>
