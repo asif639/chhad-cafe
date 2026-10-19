@@ -1,317 +1,301 @@
-
 <!DOCTYPE html>
 <html lang="bn">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#234b35">
-<title>ছাদ ক্যাফে | মেনু ও অর্ডার</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f7f5ed;color:#24352a}
-header{background:#234b35;color:white;text-align:center;padding:24px 14px}
-header h1{margin:0 0 7px}
-header p{margin:0;font-size:14px}
-main{max-width:760px;margin:auto;padding:15px}
-h2{margin-top:22px}
-.notice{padding:12px;background:#e7efe5;border-radius:10px;margin:12px 0}
-input,textarea,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;background:white}
-button{border:0;border-radius:8px;padding:12px 15px;background:#28583d;color:white;font-size:15px;cursor:pointer}
-button:disabled{opacity:.5}
-.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.item{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 7px #0001}
-.item img{width:100%;height:145px;object-fit:cover;background:#eee}
-.item-body{padding:12px}
-.item h3{font-size:17px;margin:0 0 6px}
-.desc{font-size:13px;color:#666;min-height:32px}
-.price{font-weight:bold;margin:9px 0}
-.item button{width:100%;padding:10px}
-.row{display:flex;gap:8px;align-items:center}
-.row button{flex:1}
-.cartline{display:flex;justify-content:space-between;gap:8px;padding:12px 0;border-bottom:1px solid #eee}
-.cartline button{padding:5px 10px;background:#8b352c}
-.panel{background:white;border-radius:12px;padding:15px;margin:14px 0;box-shadow:0 2px 7px #0001}
-.field{margin:12px 0}
-.field label{display:block;margin-bottom:6px;font-weight:bold}
-#message{display:none;padding:12px;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
-.muted{font-size:13px;color:#666}
-.status{background:#edf3e9;border-radius:8px;padding:12px;margin-top:8px}
-footer{text-align:center;padding:25px;color:#666}
-@media(max-width:360px){.menu{grid-template-columns:1fr}}
-</style>
+<meta name="theme-color" content="#065f46">
+<title>ছাদ ক্যাফে — QR Ordering</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
-<body>
-<header>
-<h1>🎋 ছাদ ক্যাফে</h1>
-<p>গ্রাম্য পরিবেশে চা ও মজাদার খাবার</p>
+<body class="bg-amber-50 text-slate-800 min-h-screen pb-10">
+
+<header class="bg-emerald-800 text-white p-4 shadow-md sticky top-0 z-50 flex justify-between items-center gap-2">
+  <div class="flex items-center gap-2">
+    <span class="text-3xl">🎋</span>
+    <div>
+      <h1 class="text-xl font-bold">ছাদ ক্যাফে</h1>
+      <p class="text-xs text-emerald-200">গ্রাম্য স্বাদ, বাঁশের ঘ্রাণ</p>
+    </div>
+  </div>
+  <div class="text-xs flex items-center gap-1">
+    <span>টেবিল:</span>
+    <select id="table-select" class="bg-emerald-900 text-white rounded p-2">
+      <option value="0">০ — নির্বাচন করুন</option>
+      <option value="1">১</option><option value="2">২</option>
+      <option value="3">৩</option><option value="4">৪</option>
+      <option value="5">৫</option><option value="6">৬</option>
+      <option value="7">৭</option><option value="8">৮</option>
+      <option value="9">৯</option><option value="10">১০</option>
+    </select>
+  </div>
 </header>
 
-<main>
-<div class="notice">🌿 স্বাগতম! পছন্দের খাবার বেছে কার্টে যোগ করুন। টাকা ক্যাফেতে সরাসরি পরিশোধ করবেন।</div>
+<main class="max-w-md mx-auto p-4 space-y-5">
 
-<div id="message"></div>
-
-<h2>🍵 আমাদের মেনু</h2>
-<p class="muted">মেনু লোড হতে একটু সময় লাগতে পারে।</p>
-<div id="menu" class="menu">মেনু লোড হচ্ছে...</div>
-
-<section class="panel">
-<h2>🛒 তোমার কার্ট</h2>
-<div id="cart">এখনো কোনো খাবার যোগ করোনি।</div>
-<div class="row" style="margin-top:12px">
-<strong>সর্বমোট:</strong>
-<strong id="total" style="margin-left:auto">৳০</strong>
-</div>
+<section class="bg-gradient-to-r from-emerald-700 to-teal-800 text-white p-5 rounded-2xl">
+  <h2 class="text-lg font-bold">আপনার পছন্দের খাবার অর্ডার করুন</h2>
+  <p class="text-xs mt-1">খাবার বেছে নিন, অর্ডার দিন।</p>
 </section>
 
-<section class="panel">
-<h2>📋 অর্ডারের তথ্য</h2>
-<div class="field">
-<label for="customer">তোমার নাম</label>
-<input id="customer" placeholder="নাম লিখো">
-</div>
-<div class="field">
-<label for="table">টেবিল নম্বর</label>
-<select id="table">
-<option value="1">টেবিল ১</option>
-<option value="2">টেবিল ২</option>
-<option value="3">টেবিল ৩</option>
-<option value="4">টেবিল ৪</option>
-<option value="5">টেবিল ৫</option>
-</select>
-</div>
-<div class="field">
-<label for="note">বিশেষ নির্দেশনা (ঐচ্ছিক)</label>
-<textarea id="note" rows="2" placeholder="যেমন: চায়ে চিনি কম"></textarea>
-</div>
-<p class="muted">💵 পেমেন্ট: ক্যাফেতে সরাসরি নগদ পরিশোধ</p>
-<button id="placeOrder" style="width:100%">অর্ডার নিশ্চিত করো</button>
+<section id="notice-section" class="hidden bg-white border border-amber-300 rounded-2xl p-4">
+  <h2 class="font-bold text-emerald-900 mb-3">📢 ক্যাফের নোটিশ</h2>
+  <div id="notice-container" class="space-y-3"></div>
 </section>
 
-<section class="panel">
-<h2>🔎 অর্ডারের অবস্থা</h2>
-<p class="muted">এই পেজে দেওয়া অর্ডারের অবস্থা দেখতে নিচের বাটনে চাপ দাও।</p>
-<button id="checkOrder" style="width:100%">আমার অর্ডার দেখো</button>
-<div id="orderStatus"></div>
+<section class="bg-white rounded-2xl border p-4 space-y-3">
+  <h2 class="font-bold text-emerald-900">👤 আপনার তথ্য</h2>
+  <p class="text-xs text-slate-500">তথ্য এই ব্রাউজারে সেভ থাকবে।</p>
+  <input id="cust-name" autocomplete="name" placeholder="আপনার নাম (ঐচ্ছিক)"
+    class="w-full text-sm p-3 bg-slate-50 border rounded-lg">
+  <input id="cust-note" placeholder="বিশেষ নির্দেশনা (ঐচ্ছিক)"
+    class="w-full text-sm p-3 bg-slate-50 border rounded-lg">
+  <p id="saved-info" class="text-xs text-emerald-700"></p>
+  <button id="forget-info" class="w-full bg-slate-100 p-2 rounded-lg text-sm">
+    🗑️ সংরক্ষিত তথ্য মুছুন
+  </button>
 </section>
+
+<div class="flex gap-2">
+  <button data-category="সব" onclick="filterCategory('সব')" class="category-btn bg-emerald-800 text-white px-4 py-2 rounded-full text-xs">সব</button>
+  <button data-category="চা" onclick="filterCategory('চা')" class="category-btn bg-white border px-4 py-2 rounded-full text-xs">চা</button>
+  <button data-category="নাশতা" onclick="filterCategory('নাশতা')" class="category-btn bg-white border px-4 py-2 rounded-full text-xs">নাশতা</button>
+</div>
+
+<section>
+  <h2 class="font-bold mb-3">🍵 আমাদের মেনু</h2>
+  <div id="menu-container" class="grid grid-cols-1 gap-3">
+    <p class="text-center py-6 text-slate-400 text-sm">মেনু লোড হচ্ছে...</p>
+  </div>
+</section>
+
+<section class="bg-white p-5 rounded-2xl border space-y-4">
+  <h2 class="font-bold border-b pb-2 text-emerald-900">🛒 আপনার অর্ডার</h2>
+  <div id="cart-items" class="space-y-2">
+    <p class="text-xs text-slate-400 text-center">এখনো খাবার যোগ করেননি</p>
+  </div>
+  <div class="border-t pt-3 flex justify-between font-bold">
+    <span>সর্বমোট:</span>
+    <span>৳<span id="cart-total">0</span></span>
+  </div>
+
+  <div>
+    <label class="block text-xs mb-2">পেমেন্ট মাধ্যম</label>
+    <div class="grid grid-cols-3 gap-2 text-xs">
+      <label class="border rounded-lg p-2 text-center"><input type="radio" name="payment" value="cash" checked> ক্যাশ</label>
+      <label class="border rounded-lg p-2 text-center"><input type="radio" name="payment" value="bkash"> বিকাশ</label>
+      <label class="border rounded-lg p-2 text-center"><input type="radio" name="payment" value="nagad"> নগদ</label>
+    </div>
+    <p class="text-xs text-slate-500 mt-2">মোবাইল পেমেন্টের নম্বর ক্যাফের সঙ্গে নিশ্চিত করুন।</p>
+  </div>
+
+  <button id="submit-btn" onclick="submitOrder()" class="w-full bg-emerald-700 text-white font-bold py-3 rounded-xl">
+    অর্ডার কনফার্ম করুন
+  </button>
+  <p class="text-xs text-slate-500">অর্ডারের অবস্থা নিচে দেখতে পারবেন।</p>
+</section>
+
+<section id="status-section" class="hidden bg-white border border-emerald-200 rounded-2xl p-4 space-y-2">
+  <h2 class="font-bold text-emerald-900">📦 আপনার অর্ডারের অবস্থা</h2>
+  <p class="text-sm">অর্ডার নম্বর: <strong id="status-order-id">—</strong></p>
+  <p class="text-sm">টেবিল: <strong id="status-table">—</strong></p>
+  <p class="text-sm">বর্তমান অবস্থা: <strong id="status-value">খোঁজা হচ্ছে...</strong></p>
+  <p id="status-updated" class="text-xs text-slate-500">অবস্থা স্বয়ংক্রিয়ভাবে হালনাগাদ হবে।</p>
+  <button onclick="checkOrderStatus()" class="bg-emerald-50 text-emerald-800 px-3 py-2 rounded-lg text-sm">অবস্থা রিফ্রেশ করুন</button>
+</section>
+
 </main>
 
-<footer>🎋 ছাদ ক্যাফে — ভালো খাবার, সুন্দর পরিবেশ</footer>
-
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL="https://xkwjtaiuadzmvvkgeznw.supabase.co";
-const SUPABASE_KEY="sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W";
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const SUPABASE_URL = "https://xkwjtaiuadzmvvkgeznw.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W";
+const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-let menuItems=[];
-let cart={};
-let currentOrderId=null;
+const $ = id => document.getElementById(id);
+const STORAGE_KEY = "chhadCafeCustomerInfoV1";
+const ORDER_KEY = "chhadCafeLastOrderV1";
 
-const menuBox=document.getElementById("menu");
-const cartBox=document.getElementById("cart");
-const messageBox=document.getElementById("message");
+let menuItems = [];
+let cart = {};
+let currentCategory = "সব";
+let tableNumber = 0;
+let statusTimer = null;
 
-function showMessage(text,ok=false){
- messageBox.style.display="block";
- messageBox.style.background=ok?"#d9f3df":"#ffe2df";
- messageBox.style.color=ok?"#18552b":"#8b1e17";
- messageBox.textContent=text;
+function esc(value) {
+  return String(value ?? "").replace(/[&<>"']/g, c => ({
+    "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+  }[c]));
 }
 
-function esc(v){
- return String(v??"").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
- })[c]);
+function money(value) {
+  return Number(value || 0).toLocaleString("en-BD");
 }
 
-function money(n){
- return "৳"+Number(n||0).toLocaleString("bn-BD");
-}
+/* Table number from QR URL */
+const urlParams = new URLSearchParams(location.search);
+const requestedTable = Number.parseInt(urlParams.get("table"), 10);
+if (requestedTable >= 1 && requestedTable <= 10) tableNumber = requestedTable;
+$("table-select").value = String(tableNumber);
 
-async function loadMenu(){
- try{
-  const {data,error}=await db
-   .from("menu_items")
-   .select("id,name,category,description,price,emoji,image_url,available,sort_order")
-   .eq("available",true)
-   .order("sort_order",{ascending:true});
+$("table-select").addEventListener("change", () => {
+  tableNumber = Number($("table-select").value);
+});
 
-  if(error)throw error;
-  menuItems=data||[];
-
-  if(!menuItems.length){
-   menuBox.innerHTML="এখন কোনো খাবার পাওয়া যাচ্ছে না।";
-   return;
+/* Customer information saved in this browser */
+function loadCustomerInfo() {
+  try {
+    const info = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    $("cust-name").value = info.name || "";
+    $("cust-note").value = info.note || "";
+    $("saved-info").textContent = info.name || info.note
+      ? "আপনার তথ্য সংরক্ষিত আছে।" : "এখনো কোনো তথ্য সংরক্ষিত নেই।";
+  } catch (e) {
+    $("saved-info").textContent = "তথ্য লোড করা যায়নি।";
   }
+}
 
-  menuBox.innerHTML=menuItems.map(item=>{
-   const picture=item.image_url
-    ?`<img src="${esc(item.image_url)}" alt="${esc(item.name)}" loading="lazy" onerror="this.style.display='none'">`
-    :`<div style="height:100px;display:grid;place-items:center;font-size:55px">${esc(item.emoji||"🍵")}</div>`;
+function saveCustomerInfo() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      name: $("cust-name").value,
+      note: $("cust-note").value
+    }));
+    $("saved-info").textContent = "তথ্য সংরক্ষিত হয়েছে।";
+  } catch (e) {
+    $("saved-info").textContent = "তথ্য সংরক্ষণ করা যায়নি।";
+  }
+}
 
-   return `<article class="item">
-    ${picture}
-    <div class="item-body">
-     <h3>${esc(item.name)}</h3>
-     <div class="desc">${esc(item.description||item.category||"ছাদ ক্যাফের বিশেষ মেনু")}</div>
-     <div class="price">${money(item.price)}</div>
-     <button data-add="${esc(item.id)}">কার্টে যোগ করো</button>
-    </div>
-   </article>`;
-  }).join("");
+$("cust-name").addEventListener("input", saveCustomerInfo);
+$("cust-note").addEventListener("input", saveCustomerInfo);
+$("forget-info").addEventListener("click", () => {
+  if (!confirm("সংরক্ষিত নাম ও নোট মুছবেন?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  $("cust-name").value = "";
+  $("cust-note").value = "";
+  $("saved-info").textContent = "তথ্য মুছে ফেলা হয়েছে।";
+});
+loadCustomerInfo();
 
-  menuBox.querySelectorAll("[data-add]").forEach(btn=>{
-   btn.addEventListener("click",()=>{
-    const item=menuItems.find(x=>String(x.id)===btn.dataset.add);
-    if(!item)return;
-    cart[item.id]=(cart[item.id]||0)+1;
+/* Published notices */
+async function loadNotices() {
+  try {
+    const { data, error } = await db.from("site_notices")
+      .select("id,title,message,created_at")
+      .eq("is_published", true)
+      .order("created_at", { ascending: false })
+      .limit(10);
+    if (error) throw error;
+
+    $("notice-section").classList.toggle("hidden", !data || !data.length);
+    $("notice-container").innerHTML = (data || []).map(n => `
+      <article class="bg-amber-50 border border-amber-200 rounded-xl p-3">
+        <h3 class="font-bold text-sm">${esc(n.title)}</h3>
+        <p class="text-sm mt-1 whitespace-pre-wrap">${esc(n.message)}</p>
+        <p class="text-xs text-slate-500 mt-2">${esc(new Date(n.created_at).toLocaleString("bn-BD"))}</p>
+      </article>`).join("");
+  } catch (e) {
+    console.error("Notice error:", e);
+  }
+}
+
+/* Menu */
+async function fetchMenuItems() {
+  try {
+    const { data, error } = await db.from("menu_items")
+      .select("*").eq("available", true).order("sort_order");
+    if (error) throw error;
+    menuItems = data || [];
+    renderMenu();
     renderCart();
-    showMessage(item.name+" কার্টে যোগ হয়েছে।",true);
-   });
-  });
- }catch(error){
-  menuBox.textContent="মেনু লোড হয়নি: "+error.message;
-  showMessage("মেনু দেখাতে সমস্যা হচ্ছে। Supabase-এর menu_items SELECT অনুমতি পরীক্ষা করো।");
- }
+  } catch (e) {
+    console.error("Menu error:", e);
+    $("menu-container").innerHTML =
+      '<p class="text-red-600 text-sm">মেনু লোড হয়নি। পরে আবার চেষ্টা করুন।</p>';
+  }
 }
 
-function renderCart(){
- const entries=menuItems.filter(item=>cart[item.id]>0);
- if(!entries.length){
-  cartBox.textContent="এখনো কোনো খাবার যোগ করোনি।";
- }else{
-  cartBox.innerHTML=entries.map(item=>`
-   <div class="cartline">
-    <div><strong>${esc(item.name)}</strong><br>
-    <span class="muted">${money(item.price)} × ${cart[item.id]}</span></div>
-    <div class="row">
-     <button data-minus="${esc(item.id)}">−</button>
-     <strong>${cart[item.id]}</strong>
-     <button data-plus="${esc(item.id)}">+</button>
-    </div>
-   </div>`).join("");
-
-  cartBox.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>{
-   const id=b.dataset.minus;
-   cart[id]--;
-   if(cart[id]<=0)delete cart[id];
-   renderCart();
-  });
-  cartBox.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>{
-   const id=b.dataset.plus;
-   cart[id]++;
-   renderCart();
-  });
- }
- const sum=entries.reduce((n,item)=>n+Number(item.price)*cart[item.id],0);
- document.getElementById("total").textContent=money(sum);
+function filterCategory(category) {
+  currentCategory = category;
+  renderMenu();
 }
 
-document.getElementById("placeOrder").addEventListener("click",async()=>{
- const btn=document.getElementById("placeOrder");
- const name=document.getElementById("customer").value.trim();
- const tableNumber=Number(document.getElementById("table").value);
- const note=document.getElementById("note").value.trim();
- const items=menuItems.filter(item=>cart[item.id]>0);
+function renderMenu() {
+  const filtered = currentCategory === "সব"
+    ? menuItems : menuItems.filter(x => x.category === currentCategory);
 
- if(!name){showMessage("আগে তোমার নাম লেখো।");return;}
- if(!items.length){showMessage("আগে মেনু থেকে খাবার কার্টে যোগ করো।");return;}
+  document.querySelectorAll(".category-btn").forEach(b => {
+    const active = b.dataset.category === currentCategory;
+    b.className = active
+      ? "category-btn bg-emerald-800 text-white px-4 py-2 rounded-full text-xs"
+      : "category-btn bg-white border px-4 py-2 rounded-full text-xs";
+  });
 
- const total=items.reduce((n,item)=>n+Number(item.price)*cart[item.id],0);
- btn.disabled=true;
- btn.textContent="অর্ডার পাঠানো হচ্ছে...";
-
- try{
-  /*
-   * তোমার orders টেবিলে customer_nam ও table_number কলাম
-   * থাকলে নিচের insert কাজ করবে।
-   */
-  const {data:order,error:orderError}=await db
-   .from("orders")
-   .insert({
-    table_number:tableNumber,
-    customer_nam:name,
-    note:(note?note+" | ":"")+"[পেমেন্ট: CASH]",
-    total:total,
-    status:"pending"
-   })
-   .select("id")
-   .single();
-
-  if(orderError)throw orderError;
-
-  const orderLines=items.map(item=>({
-   order_id:order.id,
-   menu_item_id:item.id,
-   menu_name:item.name,
-   quantity:cart[item.id],
-   unit_price:Number(item.price)
-  }));
-
-  const {error:itemsError}=await db
-   .from("order_items")
-   .insert(orderLines);
-
-  if(itemsError){
-   showMessage("অর্ডার #"+order.id+" তৈরি হয়েছে, কিন্তু খাবারের তালিকা সংরক্ষণে সমস্যা: "+itemsError.message);
-   currentOrderId=order.id;
-   return;
+  if (!filtered.length) {
+    $("menu-container").innerHTML =
+      '<p class="text-center text-slate-400 text-sm">কোনো খাবার পাওয়া যায়নি।</p>';
+    return;
   }
 
-  currentOrderId=order.id;
-  cart={};
+  $("menu-container").innerHTML = filtered.map(item => `
+    <article class="bg-white p-3 rounded-xl border flex justify-between items-center gap-2">
+      <div class="flex items-center gap-3 min-w-0">
+        ${item.image_url
+          ? `<img src="${esc(item.image_url)}" alt="" class="w-16 h-16 object-cover rounded-lg">`
+          : `<span class="text-2xl">${esc(item.emoji || "🍽️")}</span>`}
+        <div class="min-w-0">
+          <h3 class="text-sm font-bold">${esc(item.name)}</h3>
+          <p class="text-xs text-slate-500">${esc(item.description || "")}</p>
+          <p class="text-xs font-bold text-emerald-700">৳${money(item.price)}</p>
+        </div>
+      </div>
+      <div class="flex items-center gap-2 shrink-0">
+        ${cart[item.id]
+          ? `<button onclick="updateQty(${Number(item.id)},-1)" class="w-8 h-8 bg-slate-200 rounded">−</button>
+             <span class="text-xs">${cart[item.id]}</span>
+             <button onclick="updateQty(${Number(item.id)},1)" class="w-8 h-8 bg-emerald-700 text-white rounded">+</button>`
+          : `<button onclick="updateQty(${Number(item.id)},1)" class="bg-emerald-50 text-emerald-800 text-xs px-3 py-2 rounded-lg">+ যোগ</button>`}
+      </div>
+    </article>`).join("");
+}
+
+function updateQty(id, change) {
+  const qty = (cart[id] || 0) + change;
+  if (qty <= 0) delete cart[id];
+  else cart[id] = qty;
+  renderMenu();
   renderCart();
-  document.getElementById("orderStatus").innerHTML=
-   `<div class="status"><strong>অর্ডার #${esc(order.id)} গ্রহণ করা হয়েছে!</strong><p>মোট: ${money(total)}</p><p>অবস্থা: অপেক্ষমাণ</p><p>টাকা ক্যাফেতে সরাসরি পরিশোধ করবে।</p></div>`;
+}
 
-  showMessage("অর্ডার সফলভাবে পাঠানো হয়েছে!",true);
-  document.getElementById("orderStatus").scrollIntoView({behavior:"smooth"});
+function renderCart() {
+  const ids = Object.keys(cart);
+  let total = 0;
+  if (!ids.length) {
+    $("cart-items").innerHTML =
+      '<p class="text-xs text-slate-400 text-center">এখনো খাবার যোগ করেননি</p>';
+    $("cart-total").textContent = "0";
+    return;
+  }
 
- }catch(error){
-  showMessage("অর্ডার পাঠানো যায়নি: "+error.message);
- }finally{
-  btn.disabled=false;
-  btn.textContent="অর্ডার নিশ্চিত করো";
- }
-});
+  $("cart-items").innerHTML = ids.map(id => {
+    const item = menuItems.find(x => String(x.id) === String(id));
+    if (!item) return "";
+    const line = Number(item.price) * cart[id];
+    total += line;
+    return `<div class="flex justify-between text-xs gap-2">
+      <span>${esc(item.name)} × ${cart[id]}</span><span>৳${money(line)}</span>
+    </div>`;
+  }).join("");
+  $("cart-total").textContent = money(total);
+}
 
-const statusNames={
- pending:"অপেক্ষমাণ",
- accepted:"অর্ডার গ্রহণ করা হয়েছে",
- preparing:"খাবার তৈরি হচ্ছে",
- ready:"অর্ডার প্রস্তুত",
- save:"সংরক্ষিত",
- cancelled:"অর্ডার বাতিল"
-};
-
-document.getElementById("checkOrder").addEventListener("click",async()=>{
- const box=document.getElementById("orderStatus");
- if(!currentOrderId){
-  box.textContent="এই পেজে এখনো কোনো অর্ডার দেওয়া হয়নি।";
-  return;
- }
- box.textContent="অর্ডারের অবস্থা দেখা হচ্ছে...";
- try{
-  const {data,error}=await db
-   .from("orders")
-   .select("id,status,total")
-   .eq("id",currentOrderId)
-   .single();
-
-  if(error)throw error;
-
-  box.innerHTML=`<div class="status">
-   <strong>অর্ডার #${esc(data.id)}</strong>
-   <p>অবস্থা: ${esc(statusNames[data.status]||data.status)}</p>
-   <p>মোট: ${money(data.total)}</p>
-  </div>`;
- }catch(error){
-  box.textContent="স্ট্যাটাস দেখা যায়নি: "+error.message;
- }
-});
-
-loadMenu();
-</script>
-</body>
-</html>
+/* Show and restore last order status */
+function showSavedOrder() {
+  try {
+    const order = JSON.parse(localStorage.getItem(ORDER_KEY) || "null");
+    if (!order || !order.id || !order.tableNumber) return;
+    $("status-section").classList.remove("hidden");
+    $("status-order-id").textContent = "#" + order.id;
+    $("status-table").textContent = order.tableNumber;
+    checkOrderStatus();
+    if (statusTimer) clearIn
