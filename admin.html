@@ -4,502 +4,402 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="theme-color" content="#244c36">
-<title>ছাদ ক্যাফে | অ্যাডমিন</title>
-<style>
-*{box-sizing:border-box}
-body{margin:0;background:#f4f5ef;color:#24352a;font-family:Arial,sans-serif}
-header{background:#244c36;color:white;padding:20px}
-header h1{margin:0;font-size:23px}
-main{max-width:850px;margin:auto;padding:14px}
-.panel,.order,.food{background:white;border-radius:12px;padding:15px;margin:12px 0;box-shadow:0 2px 8px #0001}
-h2{font-size:19px}
-input,select,textarea,button{width:100%;padding:12px;margin:5px 0;border:1px solid #ccd5cc;border-radius:8px;font-size:15px}
-textarea{min-height:90px}
-button{background:#244c36;color:white;border:0;font-weight:bold;cursor:pointer}
-.secondary{background:#e5eee7;color:#244c36}
-.row{display:flex;gap:8px;align-items:center}
-.row>*{flex:1;min-width:0}
-.small{font-size:13px;color:#69736a}
-.hidden{display:none!important}
-.notice{padding:12px;border-radius:8px;background:#e1f5e5;margin:10px 0;overflow-wrap:anywhere}
-.order p{line-height:1.7}
-.actions{display:flex;gap:8px}
-.actions button{flex:1}
-hr{border:0;border-top:1px solid #ddd;margin:20px 0}
-</style>
+<meta name="theme-color" content="#065f46">
+<title>ছাদ ক্যাফে — অ্যাডমিন প্যানেল</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-<header>
-<h1>🎋 ছাদ ক্যাফে</h1>
-<div>অ্যাডমিন প্যানেল</div>
+<body class="bg-amber-50 text-slate-800 min-h-screen">
+
+<header class="bg-emerald-800 text-white p-4 shadow">
+  <div class="max-w-3xl mx-auto flex justify-between items-center gap-3">
+    <div>
+      <h1 class="text-xl font-bold">🎋 ছাদ ক্যাফে</h1>
+      <p class="text-xs text-emerald-200">অ্যাডমিন প্যানেল</p>
+    </div>
+    <button id="logout-btn" class="hidden bg-white/10 px-3 py-2 rounded-lg text-sm">
+      লগআউট
+    </button>
+  </div>
 </header>
 
-<main>
-<div id="message" class="notice hidden"></div>
+<main class="max-w-3xl mx-auto p-4 space-y-5">
 
-<section id="login" class="panel">
-<h2>🔐 অ্যাডমিন লগইন</h2>
-<p class="small">তোমার Supabase ইমেইল ও পাসওয়ার্ড দাও।</p>
-<form id="loginForm">
-<label>ইমেইল</label>
-<input id="email" type="email" required>
-<label>পাসওয়ার্ড</label>
-<input id="password" type="password" required>
-<button type="submit">লগইন</button>
-</form>
-</section>
+  <section id="login-section" class="bg-white border rounded-2xl p-5 max-w-md mx-auto mt-8">
+    <h2 class="text-lg font-bold text-emerald-900 mb-1">অ্যাডমিন লগইন</h2>
+    <p class="text-sm text-slate-500 mb-4">তোমার Supabase অ্যাকাউন্ট দিয়ে লগইন করো।</p>
+    <form id="login-form" class="space-y-3">
+      <input id="email" type="email" autocomplete="username" required
+        placeholder="অ্যাডমিন ইমেইল"
+        class="w-full border rounded-lg p-3 text-sm">
+      <input id="password" type="password" autocomplete="current-password" required
+        placeholder="পাসওয়ার্ড"
+        class="w-full border rounded-lg p-3 text-sm">
+      <button id="login-btn" type="submit"
+        class="w-full bg-emerald-700 text-white rounded-lg p-3 font-bold">
+        লগইন
+      </button>
+    </form>
+    <p id="login-message" class="text-sm mt-3" role="status"></p>
+  </section>
 
-<section id="dashboard" class="hidden">
-<div class="panel">
-<div id="account"></div>
-<button id="logout" class="secondary">লগআউট</button>
-</div>
+  <section id="dashboard" class="hidden space-y-5">
 
-<div class="row">
-<button id="ordersTab">📋 অর্ডার</button>
-<button id="menuTab" class="secondary">🍵 মেনু</button>
-<button id="noticeTab" class="secondary">📢 নোটিশ</button>
-</div>
+    <div class="bg-white border rounded-2xl p-4">
+      <div class="flex justify-between items-center gap-2">
+        <div>
+          <h2 class="font-bold text-emerald-900">📦 অর্ডার ব্যবস্থাপনা</h2>
+          <p id="order-count" class="text-xs text-slate-500 mt-1">অর্ডার লোড হচ্ছে...</p>
+        </div>
+        <button id="refresh-btn" class="bg-emerald-50 text-emerald-800 rounded-lg px-3 py-2 text-sm">
+          ↻ রিফ্রেশ
+        </button>
+      </div>
+      <p id="order-message" class="text-sm mt-3" role="status"></p>
+    </div>
 
-<section id="ordersPanel" class="panel">
-<h2>কাস্টমারের অর্ডার</h2>
-<div class="row">
-<button id="refreshOrders" class="secondary">🔄 রিফ্রেশ</button>
-<button id="soundButton">🔔 শব্দ চালু</button>
-</div>
-<p class="small">নতুন অর্ডার পেতে প্রতি ৫ সেকেন্ডে তালিকা আপডেট হবে।</p>
-<div id="ordersList">অর্ডার লোড হচ্ছে...</div>
-</section>
+    <div id="orders-list" class="space-y-4">
+      <p class="text-center text-slate-500 py-6">অর্ডার লোড হচ্ছে...</p>
+    </div>
 
-<section id="menuPanel" class="panel hidden">
-<h2>🍵 মেনু পরিচালনা</h2>
-<form id="menuForm">
-<input id="itemId" type="hidden">
-<label>খাবারের নাম</label>
-<input id="itemName" required>
-<div class="row">
-<div><label>দাম</label><input id="itemPrice" type="number" min="0" step=".01" required></div>
-<div><label>ক্যাটাগরি</label><input id="itemCategory" placeholder="চা / নাশতা"></div>
-</div>
-<label>বর্ণনা</label>
-<textarea id="itemDescription"></textarea>
-<div class="row">
-<div><label>ইমোজি</label><input id="itemEmoji" value="☕"></div>
-<div><label>ছবির URL</label><input id="itemImage" type="url" placeholder="https://..."></div>
-</div>
-<label>সাজানোর ক্রম</label>
-<input id="itemSort" type="number" value="0">
-<label>স্টকে আছে?</label>
-<select id="itemAvailable">
-<option value="true">হ্যাঁ</option>
-<option value="false">না</option>
-</select>
-<button type="submit">💾 মেনু সংরক্ষণ</button>
-<button type="button" id="clearForm" class="secondary">ফর্ম পরিষ্কার</button>
-</form>
-<hr>
-<h2>বর্তমান মেনু</h2>
-<button id="refreshMenu" class="secondary">মেনু রিফ্রেশ</button>
-<div id="menuList"></div>
-</section>
+    <section class="bg-white border rounded-2xl p-4 space-y-3">
+      <h2 class="font-bold text-emerald-900">📢 কাস্টমার পেজে নোটিশ</h2>
+      <p class="text-xs text-slate-500">
+        নোটিশ প্রকাশ করলে কাস্টমার পেজে দেখা যাবে, যদি site_notices টেবিল ও তার অনুমতি ঠিক থাকে।
+      </p>
+      <form id="notice-form" class="space-y-3">
+        <input id="notice-title" required maxlength="150"
+          placeholder="নোটিশের শিরোনাম"
+          class="w-full border rounded-lg p-3 text-sm">
+        <textarea id="notice-message" required rows="3"
+          placeholder="নোটিশের বিস্তারিত লিখো"
+          class="w-full border rounded-lg p-3 text-sm"></textarea>
+        <button id="notice-btn" type="submit"
+          class="w-full bg-emerald-700 text-white rounded-lg p-3 font-bold">
+          নোটিশ প্রকাশ করুন
+        </button>
+      </form>
+      <p id="notice-result" class="text-sm" role="status"></p>
+    </section>
 
-<section id="noticePanel" class="panel hidden">
-<h2>📢 কাস্টমারদের জন্য নোটিশ</h2>
-<p class="small">এখানে প্রকাশিত নোটিশ কাস্টমার পেজে দেখানোর জন্য সংরক্ষিত হবে।</p>
-
-<form id="noticeForm">
-<input id="noticeId" type="hidden">
-<label>নোটিশের শিরোনাম</label>
-<input id="noticeTitle" placeholder="যেমন: আজকের বিশেষ ঘোষণা" required>
-<label>নোটিশের বিস্তারিত</label>
-<textarea id="noticeMessage" placeholder="কাস্টমারদের কী জানাতে চাও?" required></textarea>
-<label>প্রকাশের অবস্থা</label>
-<select id="noticePublished">
-<option value="true">প্রকাশিত</option>
-<option value="false">প্রকাশিত নয়</option>
-</select>
-<button type="submit">📢 নোটিশ সংরক্ষণ</button>
-<button type="button" id="clearNotice" class="secondary">নতুন নোটিশ লিখব</button>
-</form>
-
-<hr>
-<h2>আগের নোটিশ</h2>
-<button type="button" id="refreshNotices" class="secondary">নোটিশ রিফ্রেশ</button>
-<div id="noticeList">নোটিশ লোড হচ্ছে...</div>
-</section>
-</section>
-
-<p class="small">নিরাপত্তা: Supabase publishable key ছাড়া অন্য কোনো গোপন key এখানে বসাবে না।</p>
+  </section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const db=window.supabase.createClient(
- "https://xkwjtaiuadzmvvkgeznw.supabase.co",
- "sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W"
-);
-const $=id=>document.getElementById(id);
+(() => {
+  "use strict";
 
-let timer=null;
-let knownIds=null;
-let loading=false;
-let audio=null;
-let soundOn=false;
-let menuCache=[];
-let noticeCache=[];
+  const SUPABASE_URL = "https://xkwjtaiuadzmvvkgeznw.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W";
 
-const statuses=[
- ["pending","নতুন"],
- ["preparing","তৈরি হচ্ছে"],
- ["ready","প্রস্তুত"],
- ["completed","সম্পন্ন"],
- ["cancelled","বাতিল"]
-];
+  const $ = id => document.getElementById(id);
+  const STATUSES = {
+    pending: "অপেক্ষমাণ",
+    accepted: "অর্ডার গ্রহণ করা হয়েছে",
+    preparing: "খাবার তৈরি হচ্ছে",
+    ready: "খাবার প্রস্তুত",
+    save: "সংরক্ষিত",
+    cancelled: "বাতিল"
+  };
 
-function showMessage(text,error=false){
- $("message").textContent=text;
- $("message").classList.remove("hidden");
- $("message").style.background=error?"#ffebee":"#e1f5e5";
- $("message").style.color=error?"#a32121":"#205b32";
-}
-function hideMessage(){$("message").classList.add("hidden")}
-function esc(v){
- return String(v??"").replace(/[&<>"']/g,c=>({
- "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
- }[c]));
-}
-function money(v){return "৳"+Number(v||0).toLocaleString("en-BD")}
-function date(v){return new Date(v).toLocaleString("bn-BD")}
+  let db = null;
+  let loading = false;
 
-function playSound(){
- if(!soundOn||!audio)return;
- try{
-  [0,.23].forEach(delay=>{
-   const osc=audio.createOscillator();
-   const gain=audio.createGain();
-   const start=audio.currentTime+delay;
-   osc.type="sine";
-   osc.frequency.value=880;
-   gain.gain.setValueAtTime(.14,start);
-   gain.gain.exponentialRampToValueAtTime(.001,start+.18);
-   osc.connect(gain);
-   gain.connect(audio.destination);
-   osc.start(start);
-   osc.stop(start+.19);
-  });
- }catch(e){console.error(e)}
-}
-
-$("soundButton").onclick=async()=>{
- try{
-  const AudioClass=window.AudioContext||window.webkitAudioContext;
-  if(!AudioClass){showMessage("এই ব্রাউজারে শব্দ চালানো যাচ্ছে না।",true);return}
-  if(!audio)audio=new AudioClass();
-  await audio.resume();
-  soundOn=true;
-  $("soundButton").textContent="🔔 শব্দ চালু আছে";
-  playSound();
-  showMessage("শব্দ চালু হয়েছে। নতুন অর্ডার এলে শব্দ হবে।");
- }catch(e){showMessage("শব্দ চালু হয়নি। আবার চেষ্টা করো।",true)}
-};
-
-async function verifyAdmin(){
- const {data:{user}}=await db.auth.getUser();
- if(!user){
-  $("login").classList.remove("hidden");
-  $("dashboard").classList.add("hidden");
-  if(timer){clearInterval(timer);timer=null}
-  return;
- }
- const {data,error}=await db.from("admin_users")
-  .select("user_id").eq("user_id",user.id).maybeSingle();
-
- if(error||!data){
-  await db.auth.signOut();
-  $("login").classList.remove("hidden");
-  $("dashboard").classList.add("hidden");
-  showMessage("অ্যাডমিন অনুমতি পাওয়া যায়নি। admin_users টেবিল ও UID পরীক্ষা করো।",true);
-  return;
- }
- $("login").classList.add("hidden");
- $("dashboard").classList.remove("hidden");
- $("account").textContent="লগইন: "+(user.email||"অ্যাডমিন");
- hideMessage();
- await loadOrders();
- await loadMenu();
- await loadNotices();
- if(!timer)timer=setInterval(loadOrders,5000);
-}
-
-$("loginForm").onsubmit=async e=>{
- e.preventDefault();
- hideMessage();
- const {error}=await db.auth.signInWithPassword({
-  email:$("email").value.trim(),
-  password:$("password").value
- });
- if(error){showMessage("লগইন সমস্যা: "+error.message,true);return}
- await verifyAdmin();
-};
-
-$("logout").onclick=async()=>{
- if(timer){clearInterval(timer);timer=null}
- await db.auth.signOut();
- $("dashboard").classList.add("hidden");
- $("login").classList.remove("hidden");
- knownIds=null;
- $("password").value="";
-};
-
-function showPanel(which){
- $("ordersPanel").classList.toggle("hidden",which!=="orders");
- $("menuPanel").classList.toggle("hidden",which!=="menu");
- $("noticePanel").classList.toggle("hidden",which!=="notice");
- $("ordersTab").classList.toggle("secondary",which!=="orders");
- $("menuTab").classList.toggle("secondary",which!=="menu");
- $("noticeTab").classList.toggle("secondary",which!=="notice");
-}
-$("ordersTab").onclick=()=>showPanel("orders");
-$("menuTab").onclick=()=>showPanel("menu");
-$("noticeTab").onclick=async()=>{
- showPanel("notice");
- await loadNotices();
-};
-
-async function loadOrders(){
- if(loading||$("dashboard").classList.contains("hidden"))return;
- loading=true;
- try{
-  const {data:orders,error}=await db.from("orders")
-   .select("*").order("created_at",{ascending:false}).limit(100);
-  if(error)throw error;
-
-  const ids=new Set((orders||[]).map(o=>String(o.id)));
-  if(knownIds!==null){
-   const newOrders=(orders||[]).filter(o=>!knownIds.has(String(o.id)));
-   if(newOrders.length){
-    playSound();
-    showMessage("🔔 নতুন অর্ডার এসেছে! মোট নতুন অর্ডার: "+newOrders.length);
-   }
-  }
-  knownIds=ids;
-
-  if(!orders||!orders.length){
-   $("ordersList").textContent="এখনো কোনো অর্ডার নেই।";
-   return;
+  function message(id, text, error = false) {
+    $(id).textContent = text;
+    $(id).className = "text-sm mt-3 " +
+      (error ? "text-red-600" : "text-emerald-700");
   }
 
-  const {data:items,error:itemError}=await db.from("order_items")
-   .select("*").in("order_id",orders.map(o=>o.id));
-  if(itemError)throw itemError;
+  function esc(value) {
+    return String(value ?? "").replace(/[&<>"']/g, c => ({
+      "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;"
+    }[c]));
+  }
 
-  const grouped={};
-  (items||[]).forEach(i=>{
-   (grouped[String(i.order_id)]??=[]).push(i);
+  function money(value) {
+    return Number(value || 0).toLocaleString("en-BD");
+  }
+
+  function showDashboard(show) {
+    $("login-section").classList.toggle("hidden", show);
+    $("dashboard").classList.toggle("hidden", !show);
+    $("logout-btn").classList.toggle("hidden", !show);
+  }
+
+  async function loadOrders() {
+    if (!db || loading) return;
+    loading = true;
+    $("refresh-btn").disabled = true;
+    $("orders-list").innerHTML =
+      '<p class="text-center text-slate-500 py-6">অর্ডার লোড হচ্ছে...</p>';
+
+    try {
+      const { data: orders, error } = await db
+        .from("orders")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .limit(100);
+
+      if (error) throw error;
+
+      if (!orders || orders.length === 0) {
+        $("order-count").textContent = "এখনো কোনো অর্ডার নেই";
+        $("orders-list").innerHTML =
+          '<div class="bg-white border rounded-xl p-5 text-center text-slate-500">এখনো কোনো অর্ডার পাওয়া যায়নি।</div>';
+        message("order-message", "");
+        return;
+      }
+
+      $("order-count").textContent = "মোট " + orders.length + "টি সাম্প্রতিক অর্ডার";
+
+      // অর্ডার আইটেম আলাদা করে আনা হচ্ছে, যাতে টেবিলে
+      // সম্পর্কিত কলামের নামের পার্থক্যে পুরো তালিকা নষ্ট না হয়।
+      let itemRows = [];
+      const ids = orders.map(o => o.id);
+
+      const { data: rows, error: itemError } = await db
+        .from("order_items")
+        .select("order_id,menu_name,quantity,unit_price")
+        .in("order_id", ids);
+
+      if (itemError) {
+        console.warn("Order items:", itemError);
+      } else {
+        itemRows = rows || [];
+      }
+
+      $("orders-list").innerHTML = orders.map(order => {
+        const items = itemRows.filter(row =>
+          String(row.order_id) === String(order.id)
+        );
+
+        const itemsHtml = items.length
+          ? items.map(item => `
+              <div class="flex justify-between gap-3 text-sm py-1">
+                <span>${esc(item.menu_name)} × ${esc(item.quantity)}</span>
+                <span>৳${money(Number(item.unit_price) * Number(item.quantity))}</span>
+              </div>`).join("")
+          : '<p class="text-xs text-slate-500">খাবারের তালিকা পাওয়া যায়নি।</p>';
+
+        const status = STATUSES[order.status] || order.status || "অজানা";
+
+        return `
+          <article class="bg-white border rounded-2xl p-4 space-y-3">
+            <div class="flex justify-between items-start gap-3">
+              <div>
+                <h3 class="font-bold text-emerald-900">অর্ডার #${esc(order.id)}</h3>
+                <p class="text-xs text-slate-500 mt-1">
+                  ${esc(order.created_at ? new Date(order.created_at).toLocaleString("bn-BD") : "")}
+                </p>
+              </div>
+              <span class="bg-emerald-50 text-emerald-800 rounded-full px-3 py-1 text-xs">
+                ${esc(status)}
+              </span>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 text-sm">
+              <div class="bg-amber-50 rounded-lg p-3">
+                <p class="text-xs text-slate-500">টেবিল</p>
+                <p class="font-bold">${esc(order.table_number ?? "—")}</p>
+              </div>
+              <div class="bg-amber-50 rounded-lg p-3">
+                <p class="text-xs text-slate-500">মোট টাকা</p>
+                <p class="font-bold">৳${money(order.total)}</p>
+              </div>
+            </div>
+
+            <div>
+              <p class="text-xs text-slate-500 mb-1">কাস্টমার</p>
+              <p class="text-sm">${esc(order.customer_nam || "নাম দেওয়া হয়নি")}</p>
+            </div>
+
+            ${order.note ? `
+              <div>
+                <p class="text-xs text-slate-500 mb-1">নোট / পেমেন্ট তথ্য</p>
+                <p class="text-sm whitespace-pre-wrap">${esc(order.note)}</p>
+              </div>` : ""}
+
+            <div class="border-t pt-3">
+              <p class="font-bold text-sm mb-2">খাবারের তালিকা</p>
+              ${itemsHtml}
+            </div>
+
+            <div class="border-t pt-3 space-y-2">
+              <label class="block text-xs font-bold">অর্ডারের অবস্থা পরিবর্তন</label>
+              <select data-status-id="${esc(order.id)}"
+                class="status-select w-full border rounded-lg p-3 text-sm">
+                ${Object.entries(STATUSES).map(([key, label]) => `
+                  <option value="${key}" ${order.status === key ? "selected" : ""}>
+                    ${label}
+                  </option>`).join("")}
+              </select>
+              <button data-save-id="${esc(order.id)}"
+                class="save-status w-full bg-emerald-700 text-white rounded-lg p-3 text-sm font-bold">
+                অবস্থা সেভ করুন
+              </button>
+              <p id="status-msg-${esc(order.id)}" class="text-xs" role="status"></p>
+            </div>
+          </article>`;
+      }).join("");
+
+      document.querySelectorAll(".save-status").forEach(button => {
+        button.addEventListener("click", () => updateStatus(button.dataset.saveId));
+      });
+
+      message("order-message", "অর্ডার তালিকা হালনাগাদ হয়েছে।");
+
+    } catch (error) {
+      console.error("Load orders:", error);
+      $("order-count").textContent = "অর্ডার লোড করা যায়নি";
+      $("orders-list").innerHTML = `
+        <div class="bg-red-50 border border-red-200 rounded-xl p-4">
+          <p class="font-bold text-red-700">অর্ডার লোড হয়নি</p>
+          <p class="text-sm text-red-600 mt-2">${esc(error.message || "অনুমতি বা সংযোগের সমস্যা")}</p>
+        </div>`;
+    } finally {
+      loading = false;
+      $("refresh-btn").disabled = false;
+    }
+  }
+
+  async function updateStatus(orderId) {
+    const select = document.querySelector(
+      `[data-status-id="${CSS.escape(String(orderId))}"]`
+    );
+    if (!select) return;
+
+    const newStatus = select.value;
+    const button = document.querySelector(
+      `[data-save-id="${CSS.escape(String(orderId))}"]`
+    );
+    button.disabled = true;
+    const statusMsgId = "status-msg-" + orderId;
+
+    try {
+      const { data, error } = await db
+        .from("orders")
+        .update({ status: newStatus })
+        .eq("id", orderId)
+        .select("id,status");
+
+      if (error) throw error;
+      if (!data || data.length === 0) {
+        throw new Error("অবস্থা বদলানো যায়নি। UPDATE অনুমতি বা RLS পলিসি পরীক্ষা করুন।");
+      }
+
+      $(statusMsgId).textContent = "অবস্থা সেভ হয়েছে: " +
+        (STATUSES[data[0].status] || data[0].status);
+      $(statusMsgId).className = "text-xs text-emerald-700";
+      await loadOrders();
+
+    } catch (error) {
+      console.error("Update status:", error);
+      $(statusMsgId).textContent = "সেভ হয়নি: " + (error.message || "ত্রুটি");
+      $(statusMsgId).className = "text-xs text-red-600";
+    } finally {
+      button.disabled = false;
+    }
+  }
+
+  $("refresh-btn").addEventListener("click", loadOrders);
+
+  $("notice-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = $("notice-btn");
+    button.disabled = true;
+    message("notice-result", "নোটিশ প্রকাশ করা হচ্ছে...");
+
+    try {
+      const title = $("notice-title").value.trim();
+      const text = $("notice-message").value.trim();
+      if (!title || !text) throw new Error("শিরোনাম ও বার্তা লিখতে হবে।");
+
+      const { error } = await db.from("site_notices").insert({
+        title: title,
+        message: text,
+        is_published: true
+      });
+
+      if (error) throw error;
+
+      $("notice-title").value = "";
+      $("notice-message").value = "";
+      message("notice-result", "নোটিশ প্রকাশ হয়েছে।");
+    } catch (error) {
+      console.error("Notice publish:", error);
+      message("notice-result",
+        "নোটিশ প্রকাশ হয়নি: " + (error.message || "ত্রুটি"), true);
+    } finally {
+      button.disabled = false;
+    }
   });
 
-  $("ordersList").innerHTML=orders.map(o=>{
-   const lines=(grouped[String(o.id)]||[]).map(i=>
-    esc(i.menu_name||"খাবার")+" × "+esc(i.quantity)+
-    " — "+money(Number(i.unit_price)*Number(i.quantity))
-   ).join("<br>");
+  $("login-form").addEventListener("submit", async event => {
+    event.preventDefault();
+    const button = $("login-btn");
+    button.disabled = true;
+    $("login-message").textContent = "লগইন হচ্ছে...";
 
-   return `<article class="order">
-    <b>অর্ডার #${esc(o.id)} · টেবিল ${esc(o.table_number)}</b>
-    <p class="small">${esc(date(o.created_at))}<br>
-    নাম: ${esc(o.customer_name||"অতিথি")}</p>
-    <div>${lines||"আইটেমের তথ্য পাওয়া যায়নি"}</div>
-    <p>${o.note?"নোট: "+esc(o.note)+"<br>":""}
-    <b>মোট: ${money(o.total)}</b></p>
-    <label>অর্ডারের অবস্থা</label>
-    <select id="status-${esc(o.id)}">
-     ${statuses.map(s=>`<option value="${s[0]}" ${s[0]===o.status?"selected":""}>${s[1]}</option>`).join("")}
-    </select>
-    <button onclick="updateStatus('${String(o.id).replace(/'/g,"")}')">স্ট্যাটাস সংরক্ষণ</button>
-   </article>`;
-  }).join("");
- }catch(e){
-  console.error(e);
-  showMessage("অর্ডার লোড হয়নি: "+(e.message||"ডেটাবেস সমস্যা"),true);
- }finally{
-  loading=false;
- }
-}
+    try {
+      const { data, error } = await db.auth.signInWithPassword({
+        email: $("email").value.trim(),
+        password: $("password").value
+      });
 
-window.updateStatus=async id=>{
- const status=$("status-"+id).value;
- const {error}=await db.from("orders").update({status}).eq("id",id);
- if(error){showMessage("স্ট্যাটাস বদলানো যায়নি: "+error.message,true);return}
- showMessage("অর্ডার #"+id+"-এর স্ট্যাটাস বদলেছে।");
- await loadOrders();
-};
-$("refreshOrders").onclick=loadOrders;
+      if (error) throw error;
+      if (!data.session) throw new Error("লগইন সেশন পাওয়া যায়নি।");
 
-function clearForm(){
- ["itemId","itemName","itemPrice","itemCategory","itemDescription","itemImage"]
- .forEach(id=>$(id).value="");
- $("itemEmoji").value="☕";
- $("itemSort").value="0";
- $("itemAvailable").value="true";
-}
-$("clearForm").onclick=clearForm;
+      showDashboard(true);
+      await loadOrders();
 
-async function loadMenu(){
- $("menuList").textContent="মেনু লোড হচ্ছে...";
- const {data,error}=await db.from("menu_items")
-  .select("*").order("sort_order").order("id");
- if(error){showMessage("মেনু লোড হয়নি: "+error.message,true);return}
- menuCache=data||[];
- $("menuList").innerHTML=menuCache.length?menuCache.map(m=>
-  `<article class="food">
-   <b>${esc(m.emoji||"🍵")} ${esc(m.name)} — ${money(m.price)}</b>
-   <p class="small">${esc(m.category||"")} · ${m.available?"স্টকে আছে":"স্টকে নেই"}</p>
-   <p>${esc(m.description||"")}</p>
-   <div class="actions">
-    <button class="secondary" onclick="editItem(${Number(m.id)})">এডিট</button>
-    <button onclick="deleteItem(${Number(m.id)})">মুছুন</button>
-   </div>
-  </article>`
- ).join(""):"মেনুতে কোনো খাবার নেই।";
-}
+    } catch (error) {
+      console.error("Login:", error);
+      message("login-message",
+        "লগইন হয়নি: " + (error.message || "ইমেইল বা পাসওয়ার্ড পরীক্ষা করুন।"), true);
+    } finally {
+      button.disabled = false;
+    }
+  });
 
-window.editItem=id=>{
- const m=menuCache.find(x=>Number(x.id)===Number(id));
- if(!m)return;
- $("itemId").value=m.id;
- $("itemName").value=m.name||"";
- $("itemPrice").value=m.price;
- $("itemCategory").value=m.category||"";
- $("itemDescription").value=m.description||"";
- $("itemEmoji").value=m.emoji||"☕";
- $("itemImage").value=m.image_url||"";
- $("itemSort").value=m.sort_order||0;
- $("itemAvailable").value=String(m.available!==false);
- window.scrollTo({top:0,behavior:"smooth"});
-};
+  $("logout-btn").addEventListener("click", async () => {
+    const { error } = await db.auth.signOut();
+    if (error) {
+      alert("লগআউট হয়নি: " + error.message);
+      return;
+    }
+    showDashboard(false);
+    $("orders-list").innerHTML = "";
+    $("password").value = "";
+    $("login-message").textContent = "লগআউট হয়েছে।";
+  });
 
-$("menuForm").onsubmit=async e=>{
- e.preventDefault();
- const id=$("itemId").value;
- const row={
-  name:$("itemName").value.trim(),
-  price:Number($("itemPrice").value),
-  category:$("itemCategory").value.trim()||null,
-  description:$("itemDescription").value.trim()||null,
-  emoji:$("itemEmoji").value.trim()||"☕",
-  image_url:$("itemImage").value.trim()||null,
-  sort_order:Number($("itemSort").value||0),
-  available:$("itemAvailable").value==="true"
- };
- const result=id
-  ?await db.from("menu_items").update(row).eq("id",id)
-  :await db.from("menu_items").insert(row);
- if(result.error){showMessage("মেনু সংরক্ষণ হয়নি: "+result.error.message,true);return}
- showMessage("মেনু সংরক্ষণ হয়েছে।");
- clearForm();
- await loadMenu();
-};
+  async function start() {
+    if (!window.supabase) {
+      message("login-message", "Supabase লাইব্রেরি লোড হয়নি। ইন্টারনেট পরীক্ষা করুন।", true);
+      return;
+    }
 
-window.deleteItem=async id=>{
- if(!confirm("এই মেনু আইটেমটি মুছবে?"))return;
- const {error}=await db.from("menu_items").delete().eq("id",id);
- if(error){showMessage("মুছতে সমস্যা: "+error.message,true);return}
- showMessage("আইটেম মুছে ফেলা হয়েছে।");
- await loadMenu();
-};
-$("refreshMenu").onclick=loadMenu;
+    db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-/* নোটিশ পরিচালনা */
-function clearNoticeForm(){
- $("noticeId").value="";
- $("noticeTitle").value="";
- $("noticeMessage").value="";
- $("noticePublished").value="true";
-}
+    try {
+      const { data, error } = await db.auth.getSession();
+      if (error) throw error;
 
-$("clearNotice").onclick=clearNoticeForm;
+      if (data.session) {
+        showDashboard(true);
+        await loadOrders();
+      } else {
+        showDashboard(false);
+      }
+    } catch (error) {
+      console.error("Session:", error);
+      showDashboard(false);
+      message("login-message", "সেশন পরীক্ষা করা যায়নি: " + error.message, true);
+    }
+  }
 
-async function loadNotices(){
- $("noticeList").textContent="নোটিশ লোড হচ্ছে...";
- const {data,error}=await db.from("site_notices")
-  .select("*").order("created_at",{ascending:false});
- if(error){
-  $("noticeList").textContent="নোটিশ লোড হয়নি।";
-  showMessage("নোটিশ লোডে সমস্যা: "+error.message,true);
-  return;
- }
- noticeCache=data||[];
- if(!noticeCache.length){
-  $("noticeList").textContent="এখনো কোনো নোটিশ নেই।";
-  return;
- }
- $("noticeList").innerHTML=noticeCache.map(n=>`
-  <article class="food">
-   <b>${esc(n.title)}</b>
-   <p>${esc(n.message).replace(/\n/g,"<br>")}</p>
-   <p class="small">
-    ${n.is_published?"🟢 প্রকাশিত":"⚪ প্রকাশিত নয়"}
-    · ${esc(date(n.created_at))}
-   </p>
-   <div class="actions">
-    <button class="secondary" onclick="editNotice(${Number(n.id)})">এডিট</button>
-    <button onclick="deleteNotice(${Number(n.id)})">মুছুন</button>
-   </div>
-  </article>
- `).join("");
-}
-
-window.editNotice=id=>{
- const n=noticeCache.find(x=>Number(x.id)===Number(id));
- if(!n)return;
- $("noticeId").value=n.id;
- $("noticeTitle").value=n.title||"";
- $("noticeMessage").value=n.message||"";
- $("noticePublished").value=String(n.is_published);
- window.scrollTo({top:0,behavior:"smooth"});
-};
-
-$("noticeForm").onsubmit=async e=>{
- e.preventDefault();
- const id=$("noticeId").value;
- const row={
-  title:$("noticeTitle").value.trim(),
-  message:$("noticeMessage").value.trim(),
-  is_published:$("noticePublished").value==="true"
- };
- if(!row.title||!row.message){
-  showMessage("শিরোনাম ও বিস্তারিত লিখো।",true);
-  return;
- }
- const result=id
-  ?await db.from("site_notices").update(row).eq("id",id)
-  :await db.from("site_notices").insert(row);
-
- if(result.error){
-  showMessage("নোটিশ সংরক্ষণ হয়নি: "+result.error.message,true);
-  return;
- }
- clearNoticeForm();
- showMessage("নোটিশ সংরক্ষণ হয়েছে।");
- await loadNotices();
-};
-
-window.deleteNotice=async id=>{
- if(!confirm("এই নোটিশটি স্থায়ীভাবে মুছবে?"))return;
- const {error}=await db.from("site_notices").delete().eq("id",id);
- if(error){
-  showMessage("নোটিশ মুছতে সমস্যা: "+error.message,true);
-  return;
- }
- showMessage("নোটিশ মুছে ফেলা হয়েছে।");
- await loadNotices();
-};
-$("refreshNotices").onclick=loadNotices;
-
-(async()=>{
- const {data:{session}}=await db.auth.getSession();
- if(session)await verifyAdmin();
+  start();
 })();
 </script>
 </body>
