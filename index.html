@@ -4,181 +4,314 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ছাদ ক্যাফে | অ্যাডমিন</title>
+<meta name="theme-color" content="#234b35">
+<title>ছাদ ক্যাফে | মেনু ও অর্ডার</title>
 <style>
 *{box-sizing:border-box}
-body{margin:0;font-family:Arial,sans-serif;background:#f4f1e8;color:#24352a}
-header{background:#234b35;color:white;padding:22px 12px;text-align:center}
-main{max-width:800px;margin:auto;padding:15px}
-button,select{padding:12px;border:1px solid #ccc;border-radius:8px;font-size:15px}
-button{background:#28583d;color:white;cursor:pointer}
+body{margin:0;font-family:Arial,sans-serif;background:#f7f5ed;color:#24352a}
+header{background:#234b35;color:white;text-align:center;padding:24px 14px}
+header h1{margin:0 0 7px}
+header p{margin:0;font-size:14px}
+main{max-width:760px;margin:auto;padding:15px}
+h2{margin-top:22px}
+.notice{padding:12px;background:#e7efe5;border-radius:10px;margin:12px 0}
+input,textarea,select{width:100%;padding:12px;border:1px solid #ccc;border-radius:8px;font-size:16px;background:white}
+button{border:0;border-radius:8px;padding:12px 15px;background:#28583d;color:white;font-size:15px;cursor:pointer}
 button:disabled{opacity:.5}
-.top{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px}
-.order{background:white;padding:16px;border-radius:12px;margin-bottom:14px;box-shadow:0 2px 8px #0001;overflow-wrap:anywhere}
-.order h3{margin-top:0}
-.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.status-row select{flex:1;min-width:150px}
-#message{display:none;padding:12px;border-radius:8px;margin-bottom:12px;overflow-wrap:anywhere}
-.muted{color:#666;font-size:13px}
+.menu{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.item{background:white;border-radius:12px;overflow:hidden;box-shadow:0 2px 7px #0001}
+.item img{width:100%;height:145px;object-fit:cover;background:#eee}
+.item-body{padding:12px}
+.item h3{font-size:17px;margin:0 0 6px}
+.desc{font-size:13px;color:#666;min-height:32px}
+.price{font-weight:bold;margin:9px 0}
+.item button{width:100%;padding:10px}
+.row{display:flex;gap:8px;align-items:center}
+.row button{flex:1}
+.cartline{display:flex;justify-content:space-between;gap:8px;padding:12px 0;border-bottom:1px solid #eee}
+.cartline button{padding:5px 10px;background:#8b352c}
+.panel{background:white;border-radius:12px;padding:15px;margin:14px 0;box-shadow:0 2px 7px #0001}
+.field{margin:12px 0}
+.field label{display:block;margin-bottom:6px;font-weight:bold}
+#message{display:none;padding:12px;border-radius:8px;margin:12px 0;overflow-wrap:anywhere}
+.muted{font-size:13px;color:#666}
+.status{background:#edf3e9;border-radius:8px;padding:12px;margin-top:8px}
+footer{text-align:center;padding:25px;color:#666}
+@media(max-width:360px){.menu{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
 <header>
-<h2>🎋 ছাদ ক্যাফে</h2>
-<div>অ্যাডমিন অর্ডার ম্যানেজমেন্ট</div>
+<h1>🎋 ছাদ ক্যাফে</h1>
+<p>গ্রাম্য পরিবেশে চা ও মজাদার খাবার</p>
 </header>
+
 <main>
-<div class="top">
-<div><strong>অর্ডার তালিকা</strong><div id="lastUpdate" class="muted">লোড হচ্ছে...</div></div>
-<button id="refreshBtn">↻ রিফ্রেশ</button>
-</div>
+<div class="notice">🌿 স্বাগতম! পছন্দের খাবার বেছে কার্টে যোগ করুন। টাকা ক্যাফেতে সরাসরি পরিশোধ করবেন।</div>
+
 <div id="message"></div>
-<div id="orders"></div>
+
+<h2>🍵 আমাদের মেনু</h2>
+<p class="muted">মেনু লোড হতে একটু সময় লাগতে পারে।</p>
+<div id="menu" class="menu">মেনু লোড হচ্ছে...</div>
+
+<section class="panel">
+<h2>🛒 তোমার কার্ট</h2>
+<div id="cart">এখনো কোনো খাবার যোগ করোনি।</div>
+<div class="row" style="margin-top:12px">
+<strong>সর্বমোট:</strong>
+<strong id="total" style="margin-left:auto">৳০</strong>
+</div>
+</section>
+
+<section class="panel">
+<h2>📋 অর্ডারের তথ্য</h2>
+<div class="field">
+<label for="customer">তোমার নাম</label>
+<input id="customer" placeholder="নাম লিখো">
+</div>
+<div class="field">
+<label for="table">টেবিল নম্বর</label>
+<select id="table">
+<option value="1">টেবিল ১</option>
+<option value="2">টেবিল ২</option>
+<option value="3">টেবিল ৩</option>
+<option value="4">টেবিল ৪</option>
+<option value="5">টেবিল ৫</option>
+</select>
+</div>
+<div class="field">
+<label for="note">বিশেষ নির্দেশনা (ঐচ্ছিক)</label>
+<textarea id="note" rows="2" placeholder="যেমন: চায়ে চিনি কম"></textarea>
+</div>
+<p class="muted">💵 পেমেন্ট: ক্যাফেতে সরাসরি নগদ পরিশোধ</p>
+<button id="placeOrder" style="width:100%">অর্ডার নিশ্চিত করো</button>
+</section>
+
+<section class="panel">
+<h2>🔎 অর্ডারের অবস্থা</h2>
+<p class="muted">এই পেজে দেওয়া অর্ডারের অবস্থা দেখতে নিচের বাটনে চাপ দাও।</p>
+<button id="checkOrder" style="width:100%">আমার অর্ডার দেখো</button>
+<div id="orderStatus"></div>
+</section>
 </main>
+
+<footer>🎋 ছাদ ক্যাফে — ভালো খাবার, সুন্দর পরিবেশ</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-const SUPABASE_URL = "https://xkwjtaiuadzmvvkgeznw.supabase.co";
-const SUPABASE_KEY = "sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W";
+const SUPABASE_URL="https://xkwjtaiuadzmvvkgeznw.supabase.co";
+const SUPABASE_KEY="sb_publishable_g1o6wnYpMSpYGi5x-ZCdaw_bD3KgN3W";
+const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
 
-const db = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let menuItems=[];
+let cart={};
+let currentOrderId=null;
 
-const statuses = [
-  {value:"pending",label:"অপেক্ষমাণ"},
-  {value:"accepted",label:"অর্ডার গ্রহণ"},
-  {value:"preparing",label:"তৈরি হচ্ছে"},
-  {value:"ready",label:"প্রস্তুত"},
-  {value:"save",label:"সংরক্ষিত"},
-  {value:"cancelled",label:"বাতিল"}
-];
+const menuBox=document.getElementById("menu");
+const cartBox=document.getElementById("cart");
+const messageBox=document.getElementById("message");
 
-const ordersBox = document.getElementById("orders");
-const messageBox = document.getElementById("message");
-let loading = false;
-
-function showMessage(text,success=false){
-  messageBox.style.display="block";
-  messageBox.style.background=success?"#d9f3df":"#ffe2df";
-  messageBox.style.color=success?"#18552b":"#8b1e17";
-  messageBox.textContent=text;
+function showMessage(text,ok=false){
+ messageBox.style.display="block";
+ messageBox.style.background=ok?"#d9f3df":"#ffe2df";
+ messageBox.style.color=ok?"#18552b":"#8b1e17";
+ messageBox.textContent=text;
 }
 
-function esc(value){
-  return String(value??"").replace(/[&<>"']/g,c=>({
-    "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-  })[c]);
+function esc(v){
+ return String(v??"").replace(/[&<>"']/g,c=>({
+ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+ })[c]);
 }
 
-function labelFor(value){
-  return statuses.find(s=>s.value===value)?.label || value || "অজানা";
+function money(n){
+ return "৳"+Number(n||0).toLocaleString("bn-BD");
 }
 
-async function loadOrders(){
-  if(loading)return;
-  loading=true;
-  document.getElementById("refreshBtn").disabled=true;
+async function loadMenu(){
+ try{
+  const {data,error}=await db
+   .from("menu_items")
+   .select("id,name,category,description,price,emoji,image_url,available,sort_order")
+   .eq("available",true)
+   .order("sort_order",{ascending:true});
 
-  try{
-    const {data,error}=await db
-      .from("orders")
-      .select("*")
-      .order("created_at",{ascending:false});
+  if(error)throw error;
+  menuItems=data||[];
 
-    if(error)throw error;
-    ordersBox.innerHTML="";
-
-    if(!data || data.length===0){
-      ordersBox.textContent="এখনও কোনো অর্ডার নেই।";
-    }
-
-    for(const order of (data||[])){
-      const customer=order.customer_nam ?? order.customer_name ?? order.customer ?? "নাম দেওয়া হয়নি";
-      const table=order.table_number ?? "উল্লেখ নেই";
-      const date=order.created_at
-        ?new Date(order.created_at).toLocaleString("bn-BD")
-        :"সময় পাওয়া যায়নি";
-
-      const card=document.createElement("section");
-      card.className="order";
-
-      const optionHTML=statuses.map(s=>
-        `<option value="${s.value}" ${order.status===s.value?"selected":""}>${s.label}</option>`
-      ).join("");
-
-      card.innerHTML=`
-        <h3>অর্ডার #${esc(order.id)}</h3>
-        <p>👤 কাস্টমার: ${esc(customer)}</p>
-        <p>🪑 টেবিল: ${esc(table)}</p>
-        <p>📝 নোট: ${esc(order.note||"নেই")}</p>
-        <p><strong>💰 মোট: ৳${esc(order.total??0)}</strong></p>
-        <p>📌 বর্তমান স্ট্যাটাস: <strong>${esc(labelFor(order.status))}</strong></p>
-        <p class="muted">${esc(date)}</p>
-        <div class="status-row">
-          <select class="statusSelect" aria-label="স্ট্যাটাস">${optionHTML}</select>
-          <button class="updateBtn">স্ট্যাটাস বদলাও</button>
-        </div>`;
-
-      card.querySelector(".updateBtn").addEventListener("click",()=>{
-        updateStatus(order.id,card);
-      });
-
-      ordersBox.appendChild(card);
-    }
-
-    document.getElementById("lastUpdate").textContent=
-      "সর্বশেষ আপডেট: "+new Date().toLocaleTimeString("bn-BD");
-
-  }catch(error){
-    showMessage("অর্ডার লোড হয়নি: "+error.message);
-  }finally{
-    loading=false;
-    document.getElementById("refreshBtn").disabled=false;
-  }
-}
-
-async function updateStatus(orderId,card){
-  const select=card.querySelector(".statusSelect");
-  const button=card.querySelector(".updateBtn");
-  const newStatus=select.value;
-
-  if(!statuses.some(s=>s.value===newStatus)){
-    showMessage("এই স্ট্যাটাস অনুমোদিত নয়।");
-    return;
+  if(!menuItems.length){
+   menuBox.innerHTML="এখন কোনো খাবার পাওয়া যাচ্ছে না।";
+   return;
   }
 
-  button.disabled=true;
-  button.textContent="আপডেট হচ্ছে...";
+  menuBox.innerHTML=menuItems.map(item=>{
+   const picture=item.image_url
+    ?`<img src="${esc(item.image_url)}" alt="${esc(item.name)}" loading="lazy" onerror="this.style.display='none'">`
+    :`<div style="height:100px;display:grid;place-items:center;font-size:55px">${esc(item.emoji||"🍵")}</div>`;
 
-  try{
-    const {data,error}=await db
-      .from("orders")
-      .update({status:newStatus})
-      .eq("id",orderId)
-      .select("id,status");
+   return `<article class="item">
+    ${picture}
+    <div class="item-body">
+     <h3>${esc(item.name)}</h3>
+     <div class="desc">${esc(item.description||item.category||"ছাদ ক্যাফের বিশেষ মেনু")}</div>
+     <div class="price">${money(item.price)}</div>
+     <button data-add="${esc(item.id)}">কার্টে যোগ করো</button>
+    </div>
+   </article>`;
+  }).join("");
 
-    if(error)throw error;
-
-    if(!data || data.length===0){
-      throw new Error("অর্ডার আপডেট হয়নি। Supabase RLS/UPDATE অনুমতি পরীক্ষা করতে হবে।");
-    }
-
-    showMessage(
-      "অর্ডার #"+orderId+" আপডেট হয়েছে: "+labelFor(newStatus),
-      true
-    );
-    await loadOrders();
-
-  }catch(error){
-    showMessage("স্ট্যাটাস বদলানো যায়নি: "+error.message);
-  }finally{
-    button.disabled=false;
-    button.textContent="স্ট্যাটাস বদলাও";
-  }
+  menuBox.querySelectorAll("[data-add]").forEach(btn=>{
+   btn.addEventListener("click",()=>{
+    const item=menuItems.find(x=>String(x.id)===btn.dataset.add);
+    if(!item)return;
+    cart[item.id]=(cart[item.id]||0)+1;
+    renderCart();
+    showMessage(item.name+" কার্টে যোগ হয়েছে।",true);
+   });
+  });
+ }catch(error){
+  menuBox.textContent="মেনু লোড হয়নি: "+error.message;
+  showMessage("মেনু দেখাতে সমস্যা হচ্ছে। Supabase-এর menu_items SELECT অনুমতি পরীক্ষা করো।");
+ }
 }
 
-document.getElementById("refreshBtn").addEventListener("click",loadOrders);
-loadOrders();
-setInterval(loadOrders,10000);
+function renderCart(){
+ const entries=menuItems.filter(item=>cart[item.id]>0);
+ if(!entries.length){
+  cartBox.textContent="এখনো কোনো খাবার যোগ করোনি।";
+ }else{
+  cartBox.innerHTML=entries.map(item=>`
+   <div class="cartline">
+    <div><strong>${esc(item.name)}</strong><br>
+    <span class="muted">${money(item.price)} × ${cart[item.id]}</span></div>
+    <div class="row">
+     <button data-minus="${esc(item.id)}">−</button>
+     <strong>${cart[item.id]}</strong>
+     <button data-plus="${esc(item.id)}">+</button>
+    </div>
+   </div>`).join("");
+
+  cartBox.querySelectorAll("[data-minus]").forEach(b=>b.onclick=()=>{
+   const id=b.dataset.minus;
+   cart[id]--;
+   if(cart[id]<=0)delete cart[id];
+   renderCart();
+  });
+  cartBox.querySelectorAll("[data-plus]").forEach(b=>b.onclick=()=>{
+   const id=b.dataset.plus;
+   cart[id]++;
+   renderCart();
+  });
+ }
+ const sum=entries.reduce((n,item)=>n+Number(item.price)*cart[item.id],0);
+ document.getElementById("total").textContent=money(sum);
+}
+
+document.getElementById("placeOrder").addEventListener("click",async()=>{
+ const btn=document.getElementById("placeOrder");
+ const name=document.getElementById("customer").value.trim();
+ const tableNumber=Number(document.getElementById("table").value);
+ const note=document.getElementById("note").value.trim();
+ const items=menuItems.filter(item=>cart[item.id]>0);
+
+ if(!name){showMessage("আগে তোমার নাম লেখো।");return;}
+ if(!items.length){showMessage("আগে মেনু থেকে খাবার কার্টে যোগ করো।");return;}
+
+ const total=items.reduce((n,item)=>n+Number(item.price)*cart[item.id],0);
+ btn.disabled=true;
+ btn.textContent="অর্ডার পাঠানো হচ্ছে...";
+
+ try{
+  /*
+   * তোমার orders টেবিলে customer_nam ও table_number কলাম
+   * থাকলে নিচের insert কাজ করবে।
+   */
+  const {data:order,error:orderError}=await db
+   .from("orders")
+   .insert({
+    table_number:tableNumber,
+    customer_nam:name,
+    note:(note?note+" | ":"")+"[পেমেন্ট: CASH]",
+    total:total,
+    status:"pending"
+   })
+   .select("id")
+   .single();
+
+  if(orderError)throw orderError;
+
+  const orderLines=items.map(item=>({
+   order_id:order.id,
+   menu_item_id:item.id,
+   menu_name:item.name,
+   quantity:cart[item.id],
+   unit_price:Number(item.price)
+  }));
+
+  const {error:itemsError}=await db
+   .from("order_items")
+   .insert(orderLines);
+
+  if(itemsError){
+   showMessage("অর্ডার #"+order.id+" তৈরি হয়েছে, কিন্তু খাবারের তালিকা সংরক্ষণে সমস্যা: "+itemsError.message);
+   currentOrderId=order.id;
+   return;
+  }
+
+  currentOrderId=order.id;
+  cart={};
+  renderCart();
+  document.getElementById("orderStatus").innerHTML=
+   `<div class="status"><strong>অর্ডার #${esc(order.id)} গ্রহণ করা হয়েছে!</strong><p>মোট: ${money(total)}</p><p>অবস্থা: অপেক্ষমাণ</p><p>টাকা ক্যাফেতে সরাসরি পরিশোধ করবে।</p></div>`;
+
+  showMessage("অর্ডার সফলভাবে পাঠানো হয়েছে!",true);
+  document.getElementById("orderStatus").scrollIntoView({behavior:"smooth"});
+
+ }catch(error){
+  showMessage("অর্ডার পাঠানো যায়নি: "+error.message);
+ }finally{
+  btn.disabled=false;
+  btn.textContent="অর্ডার নিশ্চিত করো";
+ }
+});
+
+const statusNames={
+ pending:"অপেক্ষমাণ",
+ accepted:"অর্ডার গ্রহণ করা হয়েছে",
+ preparing:"খাবার তৈরি হচ্ছে",
+ ready:"অর্ডার প্রস্তুত",
+ save:"সংরক্ষিত",
+ cancelled:"অর্ডার বাতিল"
+};
+
+document.getElementById("checkOrder").addEventListener("click",async()=>{
+ const box=document.getElementById("orderStatus");
+ if(!currentOrderId){
+  box.textContent="এই পেজে এখনো কোনো অর্ডার দেওয়া হয়নি।";
+  return;
+ }
+ box.textContent="অর্ডারের অবস্থা দেখা হচ্ছে...";
+ try{
+  const {data,error}=await db
+   .from("orders")
+   .select("id,status,total")
+   .eq("id",currentOrderId)
+   .single();
+
+  if(error)throw error;
+
+  box.innerHTML=`<div class="status">
+   <strong>অর্ডার #${esc(data.id)}</strong>
+   <p>অবস্থা: ${esc(statusNames[data.status]||data.status)}</p>
+   <p>মোট: ${money(data.total)}</p>
+  </div>`;
+ }catch(error){
+  box.textContent="স্ট্যাটাস দেখা যায়নি: "+error.message;
+ }
+});
+
+loadMenu();
 </script>
 </body>
 </html>
